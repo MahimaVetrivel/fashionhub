@@ -23,6 +23,35 @@
         body {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
+                /* Mobile fix: navbar wrap + category strip scroll */
+        @media (max-width: 767.98px) {
+            .fh-main-nav .container {
+                flex-wrap: wrap;
+                gap: 0.5rem !important;
+            }
+            .fh-brand .brand-sub {
+                display: none;
+            }
+            .fh-search-bar {
+                order: 3;
+                flex: 0 0 100%;
+                min-width: 0;
+                margin: 0 !important;
+            }
+            .fh-search-group,
+            .fh-search-input {
+                min-width: 0;
+                width: 100%;
+            }
+            .fh-cat-strip-inner {
+                display: flex;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+            .fh-cat-item {
+                flex: 0 0 auto;
+            }
+        }
     </style>
 </head>
 
