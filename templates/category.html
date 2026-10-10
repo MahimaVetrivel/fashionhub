@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ category_name }} Fashion Collection - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Categories</a></li>
+            <li class="breadcrumb-item active text-danger fw-semibold" aria-current="page">{{ category_name }}</li>
+        </ol>
+    </nav>
+
+    <!-- CATEGORY BANNER -->
+    <div class="p-4 p-md-5 rounded-4 mb-4 text-white position-relative overflow-hidden"
+         style="background: linear-gradient(135deg, {% if category_name == 'Women' %}#ff416c, #ff4b2b{% elif category_name == 'Men' %}#1e3c72, #2a5298{% else %}#11998e, #38ef7d{% endif %});">
+        <div class="position-relative" style="z-index: 2; max-width: 600px;">
+            <span class="badge bg-white text-dark mb-2 px-3 py-2 fw-bold text-uppercase">Exclusive Collection</span>
+            <h1 class="display-6 fw-bold mb-2">{{ category_name }}'s Fashion Trends</h1>
+            <p class="mb-0 opacity-90 small">
+                Explore handcrafted styles, modern cuts, and seasonal must-haves. Flat discounts up to 60% with fast doorstep delivery.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDEBAR: FILTERS -->
+        <div class="col-lg-3">
+            <div class="bg-white p-3 rounded-3 shadow-sm border sticky-top" style="top: 80px; z-index: 10;">
+                <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-funnel me-1 text-danger"></i> Filters</h6>
+                    <a href="{% url 'category' category_name %}" class="small text-danger text-decoration-none fw-semibold">Reset</a>
+                </div>
+
+                <!-- CATEGORIES -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Category</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{% url 'category' 'Women' %}"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if category_name == 'Women' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Women</span>
+                        </a>
+                        <a href="{% url 'category' 'Men' %}"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if category_name == 'Men' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Men</span>
+                        </a>
+                        <a href="{% url 'category' 'Kids' %}"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if category_name == 'Kids' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Kids</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- PRICE RANGE -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Price</h6>
+                    <div class="d-flex flex-column gap-2 small">
+                        <a href="{% url 'category' category_name %}?max_price=500" class="text-decoration-none text-dark py-1">Under ₹500</a>
+                        <a href="{% url 'category' category_name %}?min_price=500&max_price=1000" class="text-decoration-none text-dark py-1">₹500 - ₹1,000</a>
+                        <a href="{% url 'category' category_name %}?min_price=1000&max_price=2000" class="text-decoration-none text-dark py-1">₹1,000 - ₹2,000</a>
+                        <a href="{% url 'category' category_name %}?min_price=2000" class="text-decoration-none text-dark py-1">Over ₹2,000</a>
+                    </div>
+
+                    <!-- Custom Price Form -->
+                    <form action="{% url 'category' category_name %}" method="GET" class="mt-2 pt-2 border-top">
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ min_price }}">
+                            <span class="input-group-text">to</span>
+                            <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ max_price }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Apply Price</button>
+                    </form>
+                </div>
+
+                <!-- OFFERS -->
+                <div class="mb-3">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Offers</h6>
+                    <div class="d-flex flex-column gap-2 small text-muted">
+                        <div><input type="checkbox" id="c1" checked disabled> <label for="c1">Special Price</label></div>
+                        <div><input type="checkbox" id="c2" checked disabled> <label for="c2">Buy More Save More</label></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: PRODUCTS -->
+        <div class="col-lg-9">
+
+            <!-- HEADER BAR WITH COUNT & SORT -->
+            <div class="bg-white p-3 rounded-3 shadow-sm border mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">{{ category_name }} Collection</h5>
+                    <small class="text-muted">Showing {{ total_count }} item{{ total_count|pluralize }}</small>
+                </div>
+
+                <!-- SORT OPTIONS -->
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-semibold text-muted text-nowrap">Sort by:</span>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="location = this.value;">
+                        <option value="{% url 'category' category_name %}?sort=popular" {% if selected_sort == 'popular' or not selected_sort %}selected{% endif %}>Popularity</option>
+                        <option value="{% url 'category' category_name %}?sort=price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="{% url 'category' category_name %}?sort=price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="{% url 'category' category_name %}?sort=newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PRODUCT GRID -->
+            {% if products %}
+            <div class="fh-product-grid">
+                {% for product in products %}
+                <div class="fh-product-card">
+                    <div class="fh-card-img-wrap">
+                        <span class="fh-card-tag {% if forloop.counter|divisibleby:2 %}bestseller{% else %}hot{% endif %}">
+                            {% if forloop.counter|divisibleby:2 %}Bestseller{% else %}Top Deal{% endif %}
+                        </span>
+
+                        <!-- WISHLIST HEART BUTTON -->
+                        <a href="{% url 'toggle_wishlist' product.id %}"
+                           class="wish-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                           title="Wishlist">
+                            <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                        </a>
+
+                        <a href="{% url 'product_detail' product.id %}">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        </a>
+                    </div>
+
+                    <div class="fh-card-body">
+                        <span class="fh-card-cat">{{ product.category }}</span>
+                        <a href="{% url 'product_detail' product.id %}" class="fh-card-title" title="{{ product.name }}">
+                            {{ product.name }}
+                        </a>
+
+                        <!-- RATING PILL -->
+                        <div class="fh-rating-row">
+                            <span class="fh-rating-badge">
+                                {{ product.rating }} <i class="bi bi-star-fill"></i>
+                            </span>
+                            <span class="fh-rating-count">({{ product.reviews_count }})</span>
+                        </div>
+
+                        <!-- PRICE SECTION -->
+                        <div class="fh-price-wrap">
+                            <span class="fh-current-price">₹{{ product.price }}</span>
+                            <span class="fh-mrp-price">₹{{ product.original_price }}</span>
+                            <span class="fh-discount-pct">{{ product.discount_percent }}% off</span>
+                        </div>
+
+                        <div class="fh-delivery-note">
+                            <i class="bi bi-truck me-1"></i> FREE Delivery by Tomorrow
+                        </div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div class="fh-card-actions">
+                            <button type="button"
+                                    class="fh-btn-cart ajax-add-cart"
+                                    data-url="{% url 'add_to_cart' product.id %}">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                            <a href="{% url 'product_detail' product.id %}" class="fh-btn-view" title="View details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <!-- EMPTY STATE -->
+            <div class="bg-white rounded-3 shadow-sm border p-5 text-center my-4">
+                <div style="font-size: 3.5rem;">🛍️</div>
+                <h4 class="fw-bold mt-3">No Products in this Category</h4>
+                <p class="text-muted" style="max-width: 500px; margin: 0 auto;">
+                    We are currently restocking products for this section. Check back soon or explore other categories.
+                </p>
+                <div class="mt-4">
+                    <a href="{% url 'home' %}" class="btn btn-danger px-4">Continue Shopping</a>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

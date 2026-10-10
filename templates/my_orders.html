@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Orders - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 920px;">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">My Orders</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-box-seam-fill text-danger me-2"></i> My Orders</h3>
+            <p class="text-muted small mb-0">Track shipments, review past orders, or initiate returns</p>
+        </div>
+        <a href="{% url 'home' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold">
+            Shop More Items
+        </a>
+    </div>
+
+    {% for order in orders %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border">
+
+        <!-- ORDER HEADER -->
+        <div class="card-header bg-white py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+            <div>
+                <span class="text-muted small">ORDER ID:</span>
+                <span class="fw-bold text-danger ms-1">{{ order.order_number }}</span>
+                <div class="small text-muted">Placed on {{ order.created_at|date:"d M Y, h:i A" }}</div>
+            </div>
+            <div class="text-end">
+                <span class="status-pill status-{{ order.status|slugify }}">{{ order.get_status_display }}</span>
+            </div>
+        </div>
+
+        <!-- ORDER BODY / ITEMS -->
+        <div class="card-body p-4">
+            {% for item in order.items.all %}
+            <div class="d-flex align-items-center justify-content-between py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                <div class="d-flex align-items-center gap-3">
+                    {% if item.product %}
+                    <a href="{% url 'product_detail' item.product.id %}">
+                        <img src="{{ item.image }}" class="rounded-3 border p-1" width="70" height="70" style="object-fit:contain;" alt="{{ item.name }}">
+                    </a>
+                    {% else %}
+                    <img src="{{ item.image }}" class="rounded-3 border p-1" width="70" height="70" style="object-fit:contain;" alt="{{ item.name }}">
+                    {% endif %}
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">
+                            {% if item.product %}
+                            <a href="{% url 'product_detail' item.product.id %}" class="text-decoration-none text-dark">{{ item.name }}</a>
+                            {% else %}
+                            {{ item.name }}
+                            {% endif %}
+                        </h6>
+                        <small class="text-muted">Quantity: {{ item.quantity }} × ₹{{ item.price }}</small>
+                        <div class="text-success small fw-semibold mt-1">
+                            <i class="bi bi-truck me-1"></i> Standard Express Delivery
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="fw-bold fs-6 text-dark">₹{{ item.subtotal }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- ORDER FOOTER -->
+        <div class="card-footer bg-light px-4 py-3 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="small text-muted">{{ order.payment_label }}</span>
+                <div class="fw-bold fs-6 text-dark">Total: <span class="text-danger">₹{{ order.total }}</span></div>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'track_order' order.id %}" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold">
+                    <i class="bi bi-geo-alt-fill me-1"></i> Track Order
+                </a>
+            </div>
+        </div>
+
+    </div>
+    {% empty %}
+    <div class="bg-white rounded-4 shadow-sm border p-5 text-center my-4" style="max-width: 550px; margin: 0 auto;">
+        <div style="font-size: 3.5rem;">📦</div>
+        <h4 class="fw-bold mt-3">No Orders Placed Yet</h4>
+        <p class="text-muted small">
+            Looks like you haven't bought anything yet. Explore top fashion deals and place your first order today!
+        </p>
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-danger rounded-pill px-4 fw-bold">
+                Browse Trending Clothes
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+
+</div>
+{% endblock %}

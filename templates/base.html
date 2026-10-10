@@ -1,0 +1,551 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FashionHub - Trending Clothes & Fashion Marketplace{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- FLOATING TOAST NOTIFICATION CONTAINER -->
+<div id="toastContainer"></div>
+
+<!-- TOP PROMO BANNER (Amazon / Flipkart style) -->
+<div class="bg-dark text-white py-1 px-3 text-center small d-none d-md-block" style="font-size: 0.78rem; letter-spacing: 0.3px;">
+    <span>⚡ <strong>GRAND FASHION FESTIVAL:</strong> Flat 50% - 70% OFF on Top Brands | Free Shipping on Orders Above ₹499 | Easy 7-Day Returns</span>
+</div>
+
+<!-- MAIN NAVBAR -->
+<nav class="fh-main-nav">
+    <div class="container d-flex align-items-center justify-content-between gap-3">
+
+        <!-- BRAND LOGO -->
+        <a class="fh-brand" href="{% url 'home' %}">
+            <span class="brand-text"><i class="bi bi-bag-heart-fill"></i> FashionHub</span>
+            <span class="brand-sub">Explore <span>Plus ✦</span></span>
+        </a>
+
+        <!-- SEARCH BAR (Amazon & Flipkart Style with Categories & Live Auto-Suggest) -->
+        <div class="fh-search-bar flex-grow-1 mx-lg-4">
+            <form action="{% url 'search' %}" method="GET" class="fh-search-group" id="mainSearchForm">
+                <select name="category" class="fh-search-cat d-none d-md-block" id="searchCategorySelect">
+                    <option value="All" {% if not selected_category or selected_category == 'All' %}selected{% endif %}>All</option>
+                    <option value="Women" {% if selected_category == 'Women' %}selected{% endif %}>Women</option>
+                    <option value="Men" {% if selected_category == 'Men' %}selected{% endif %}>Men</option>
+                    <option value="Kids" {% if selected_category == 'Kids' %}selected{% endif %}>Kids</option>
+                </select>
+
+                <input type="text"
+                       name="q"
+                       id="searchInput"
+                       class="fh-search-input"
+                       value="{{ query|default:'' }}"
+                       placeholder="Search for dresses, kurtas, shirts, jeans..."
+                       autocomplete="off">
+
+                <button class="fh-search-btn" type="submit" title="Search">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+
+            <!-- Auto-Suggest Dropdown Results -->
+            <div class="fh-search-dropdown" id="searchSuggestions"></div>
+        </div>
+
+        <!-- RIGHT SIDE ACTIONS -->
+        <div class="d-flex align-items-center gap-3 gap-md-4">
+
+            <!-- WISHLIST -->
+            <a href="{% url 'wishlist' %}" class="position-relative text-decoration-none text-dark d-flex flex-column align-items-center" title="Wishlist" id="navWishlist">
+                <div class="position-relative">
+                    <i class="bi bi-heart fs-5"></i>
+                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle {% if not wishlist_count %}d-none{% endif %}" id="wishlistBadge">
+                        {{ wishlist_count|default:0 }}
+                    </span>
+                </div>
+                <span class="d-none d-lg-inline small fw-semibold text-muted" style="font-size: 0.72rem;">Wishlist</span>
+            </a>
+
+            <!-- CART -->
+            <a href="{% url 'cart' %}" class="position-relative text-decoration-none text-dark d-flex flex-column align-items-center" title="Shopping Cart" id="navCart">
+                <div class="position-relative">
+                    <i class="bi bi-cart3 fs-5" id="navCartIcon"></i>
+                    <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle {% if not cart_count %}d-none{% endif %}" id="cartBadge">
+                        {{ cart_count|default:0 }}
+                    </span>
+                </div>
+                <span class="d-none d-lg-inline small fw-semibold text-muted" style="font-size: 0.72rem;">Cart</span>
+            </a>
+
+            <!-- USER ACCOUNT -->
+            {% if user.is_authenticated %}
+            <div class="dropdown">
+                <button class="btn btn-outline-dark rounded-pill px-3 py-1 dropdown-toggle d-flex align-items-center gap-2 fw-semibold" style="font-size: 0.88rem;" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle fs-6 text-danger"></i>
+                    <span>{{ user.username|truncatechars:12 }}</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+                    <li class="px-3 py-2 border-bottom">
+                        <small class="text-muted d-block">Hello,</small>
+                        <strong class="text-dark">{{ user.username }}</strong>
+                    </li>
+                    <li><a class="dropdown-item py-2" href="{% url 'my_profile' %}"><i class="bi bi-person me-2 text-danger"></i> My Profile</a></li>
+                    <li><a class="dropdown-item py-2" href="{% url 'my_orders' %}"><i class="bi bi-box-seam me-2 text-danger"></i> My Orders</a></li>
+                    <li><a class="dropdown-item py-2" href="{% url 'wishlist' %}"><i class="bi bi-heart me-2 text-danger"></i> My Wishlist</a></li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li><a class="dropdown-item py-2 text-danger fw-semibold" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                </ul>
+            </div>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn btn-danger rounded-pill px-4 py-1 fw-bold" style="font-size: 0.9rem;">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Login
+            </a>
+            {% endif %}
+
+        </div>
+
+    </div>
+</nav>
+
+<!-- FLIPKART STYLE CATEGORY NAVIGATION STRIP -->
+<div class="fh-cat-strip">
+    <div class="container fh-cat-strip-inner">
+        <a href="{% url 'home' %}" class="fh-cat-item">
+            <i class="bi bi-grid-fill"></i>
+            <span>All Store</span>
+        </a>
+        <a href="{% url 'category' 'Women' %}" class="fh-cat-item {% if category_name == 'Women' %}active{% endif %}">
+            <i class="bi bi-gender-female"></i>
+            <span>Women</span>
+        </a>
+        <a href="{% url 'category' 'Men' %}" class="fh-cat-item {% if category_name == 'Men' %}active{% endif %}">
+            <i class="bi bi-gender-male"></i>
+            <span>Men</span>
+        </a>
+        <a href="{% url 'category' 'Kids' %}" class="fh-cat-item {% if category_name == 'Kids' %}active{% endif %}">
+            <i class="bi bi-emoji-smile"></i>
+            <span>Kids</span>
+        </a>
+        <a href="{% url 'search' %}?q=dress" class="fh-cat-item">
+            <i class="bi bi-stars"></i>
+            <span>Dresses</span>
+        </a>
+        <a href="{% url 'search' %}?q=shirt" class="fh-cat-item">
+            <i class="bi bi-person-badge"></i>
+            <span>Shirts & Tops</span>
+        </a>
+        <a href="{% url 'search' %}?sort=price_asc" class="fh-cat-item">
+            <i class="bi bi-tag-fill"></i>
+            <span>Budget Deals</span>
+        </a>
+        <a href="{% url 'search' %}?sort=newest" class="fh-cat-item">
+            <i class="bi bi-fire"></i>
+            <span>New Arrivals</span>
+        </a>
+    </div>
+</div>
+
+<!-- MESSAGES -->
+{% if messages %}
+<div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- MAIN CONTENT BLOCK -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- AMAZON & FLIPKART STYLE FOOTER -->
+<footer class="bg-white border-top mt-5 pt-5 pb-4 text-dark">
+    <!-- Trust features banner -->
+    <div class="container pb-4 border-bottom">
+        <div class="row g-4 text-center">
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-patch-check-fill text-danger fs-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold">100% Original</div>
+                        <small class="text-muted">Guaranteed Authentic</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-arrow-repeat text-danger fs-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold">7-Day Return</div>
+                        <small class="text-muted">Instant Replacement</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-truck text-danger fs-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold">Fast Delivery</div>
+                        <small class="text-muted">Doorstep in 2-3 Days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <i class="bi bi-shield-lock-fill text-danger fs-2"></i>
+                    <div class="text-start">
+                        <div class="fw-bold">Secure Payments</div>
+                        <small class="text-muted">UPI / Cards / Net Banking</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container pt-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <h5 class="fw-bold text-danger mb-3"><i class="bi bi-bag-heart-fill"></i> FashionHub</h5>
+                <p class="text-muted small">
+                    India's leading destination for modern western, ethnic, and trending fashion collections for Men, Women & Kids. Quality guaranteed at unbeatable prices.
+                </p>
+                <div class="d-flex gap-2 text-danger fs-5 mt-3">
+                    <i class="bi bi-instagram p-2 bg-light rounded-circle"></i>
+                    <i class="bi bi-facebook p-2 bg-light rounded-circle"></i>
+                    <i class="bi bi-twitter-x p-2 bg-light rounded-circle"></i>
+                    <i class="bi bi-youtube p-2 bg-light rounded-circle"></i>
+                </div>
+            </div>
+            <div class="col-6 col-md-2">
+                <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.85rem;">Online Shopping</h6>
+                <ul class="list-unstyled small text-muted lh-lg">
+                    <li><a href="{% url 'category' 'Women' %}" class="text-decoration-none text-muted">Women Wear</a></li>
+                    <li><a href="{% url 'category' 'Men' %}" class="text-decoration-none text-muted">Men's Fashion</a></li>
+                    <li><a href="{% url 'category' 'Kids' %}" class="text-decoration-none text-muted">Kids Collection</a></li>
+                    <li><a href="{% url 'search' %}?sort=newest" class="text-decoration-none text-muted">New Arrivals</a></li>
+                    <li><a href="{% url 'search' %}?sort=price_asc" class="text-decoration-none text-muted">Special Offers</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-md-3">
+                <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.85rem;">Customer Care</h6>
+                <ul class="list-unstyled small text-muted lh-lg">
+                    <li><a href="{% url 'my_orders' %}" class="text-decoration-none text-muted">Track Your Order</a></li>
+                    <li><a href="{% url 'wishlist' %}" class="text-decoration-none text-muted">Wishlist</a></li>
+                    <li><a href="#" class="text-decoration-none text-muted">Return Policy</a></li>
+                    <li><a href="#" class="text-decoration-none text-muted">Terms of Use</a></li>
+                    <li><a href="#" class="text-decoration-none text-muted">Contact Support</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="fw-bold text-uppercase mb-3" style="font-size: 0.85rem;">100% Safe Payments</h6>
+                <p class="text-muted small mb-3">We accept all major payment methods:</p>
+                <div class="d-flex flex-wrap gap-2 fs-4 text-secondary">
+                    <span class="badge bg-light text-dark border p-2">UPI (GPay / PhonePe)</span>
+                    <span class="badge bg-light text-dark border p-2">Credit / Debit Card</span>
+                    <span class="badge bg-light text-dark border p-2">Net Banking</span>
+                    <span class="badge bg-light text-dark border p-2">Cash on Delivery</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center pt-4 mt-4 border-top text-muted small">
+            &copy; 2026 FashionHub India Ltd. All rights reserved. Made with ❤️ for fashionable shoppers.
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- GLOBAL NOTIFICATION AND INTERACTION JAVASCRIPT -->
+<script>
+// ==========================================
+// TOAST NOTIFICATION SYSTEM
+// ==========================================
+function showToast(options) {
+    var title = options.title || 'Notification';
+    var message = options.message || '';
+    var type = options.type || 'success'; // success, info, warning
+    var image = options.image || '';
+    var actionUrl = options.actionUrl || '';
+    var actionText = options.actionText || 'View Cart →';
+    var duration = options.duration || 4500;
+
+    var container = document.getElementById('toastContainer');
+    if (!container) return;
+
+    var toast = document.createElement('div');
+    toast.className = 'fh-toast fh-toast-' + type;
+
+    var html = '';
+    if (image) {
+        html += '<img src="' + image + '" alt="Product" class="fh-toast-thumb">';
+    } else {
+        var icon = type === 'success' ? 'bi-check-circle-fill text-success' : (type === 'warning' ? 'bi-exclamation-circle-fill text-warning' : 'bi-info-circle-fill text-primary');
+        html += '<i class="bi ' + icon + ' fs-3"></i>';
+    }
+
+    html += '<div class="fh-toast-content">';
+    html += '<div class="fh-toast-title">' + title + '</div>';
+    html += '<div class="fh-toast-text">' + message + '</div>';
+    if (actionUrl) {
+        html += '<a href="' + actionUrl + '" class="fh-toast-action">' + actionText + '</a>';
+    }
+    html += '</div>';
+    html += '<button type="button" class="fh-toast-close" title="Close">&times;</button>';
+
+    toast.innerHTML = html;
+    container.appendChild(toast);
+
+    function dismiss() {
+        toast.style.animation = 'fhToastSlideOut 0.3s ease forwards';
+        setTimeout(function() {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+    }
+
+    var closeBtn = toast.querySelector('.fh-toast-close');
+    if (closeBtn) closeBtn.addEventListener('click', dismiss);
+
+    setTimeout(dismiss, duration);
+}
+
+// Bounce cart icon in navbar
+function bounceCart() {
+    var icon = document.getElementById('navCartIcon');
+    if (icon) {
+        icon.classList.remove('cart-bouncing');
+        void icon.offsetWidth; // trigger reflow
+        icon.classList.add('cart-bouncing');
+    }
+}
+
+// Update Cart Badge Count
+function updateCartBadge(count) {
+    var badge = document.getElementById('cartBadge');
+    if (badge) {
+        badge.textContent = count;
+        if (count > 0) {
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
+    bounceCart();
+}
+
+// Update Wishlist Badge Count
+function updateWishlistBadge(count) {
+    var badge = document.getElementById('wishlistBadge');
+    if (badge) {
+        badge.textContent = count;
+        if (count > 0) {
+            badge.classList.remove('d-none');
+        } else {
+            badge.classList.add('d-none');
+        }
+    }
+}
+
+// ==========================================
+// GLOBAL AJAX ADD TO CART HANDLER
+// ==========================================
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.ajax-add-cart');
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    var url = btn.getAttribute('href') || btn.getAttribute('data-url');
+    if (!url) return;
+
+    // Spinner state
+    var originalHtml = btn.innerHTML;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status"></span> Adding...';
+    btn.disabled = true;
+
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(function(r) {
+        if (r.redirected && r.url.indexOf('/login/') !== -1) {
+            window.location = r.url;
+            return null;
+        }
+        return r.json();
+    })
+    .then(function(data) {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        if (!data) return;
+
+        if (data.status === 'success') {
+            updateCartBadge(data.cart_count);
+            showToast({
+                title: '✓ Added to Cart!',
+                message: data.product_name ? ('₹' + data.product_price + ' • ' + data.product_name) : 'Item successfully added.',
+                type: 'success',
+                image: data.product_image,
+                actionUrl: "{% url 'cart' %}",
+                actionText: 'View Cart & Checkout →'
+            });
+        } else {
+            showToast({
+                title: 'Note',
+                message: data.message || 'Could not add to cart.',
+                type: 'warning'
+            });
+        }
+    })
+    .catch(function(err) {
+        btn.innerHTML = originalHtml;
+        btn.disabled = false;
+        // Fallback to normal navigation
+        window.location = url;
+    });
+});
+
+// ==========================================
+// GLOBAL AJAX WISHLIST TOGGLE HANDLER
+// ==========================================
+document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.wish-btn');
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    var url = btn.getAttribute('href');
+    if (!url) return;
+
+    fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) {
+        if (r.redirected && r.url.indexOf('/login/') !== -1) {
+            window.location = r.url;
+            return null;
+        }
+        return r.json();
+    })
+    .then(function(data) {
+        if (!data) return;
+        btn.classList.toggle('active', data.added);
+        var icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = data.added ? 'bi bi-heart-fill' : 'bi bi-heart';
+        }
+        updateWishlistBadge(data.count);
+
+        showToast({
+            title: data.added ? '❤️ Added to Wishlist' : 'Removed from Wishlist',
+            message: data.added ? 'Saved to your personal wishlist' : 'Item removed from your wishlist',
+            type: data.added ? 'success' : 'info',
+            actionUrl: "{% url 'wishlist' %}",
+            actionText: 'Open Wishlist →'
+        });
+    })
+    .catch(function() {
+        window.location = url;
+    });
+});
+
+// ==========================================
+// LIVE AUTO-SUGGEST SEARCH BAR (Amazon Style)
+// ==========================================
+(function() {
+    var input = document.getElementById('searchInput');
+    var dropdown = document.getElementById('searchSuggestions');
+    var debounceTimer = null;
+
+    if (!input || !dropdown) return;
+
+    input.addEventListener('input', function() {
+        var query = input.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < 2) {
+            dropdown.style.display = 'none';
+            dropdown.innerHTML = '';
+            return;
+        }
+
+        debounceTimer = setTimeout(function() {
+            fetch('/api/search-suggest/?q=' + encodeURIComponent(query))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (!data.results || data.results.length === 0) {
+                        dropdown.innerHTML = '<div class="p-3 text-muted text-center small">No matching items found for "<strong>' + query + '</strong>"</div>';
+                        dropdown.style.display = 'block';
+                        return;
+                    }
+
+                    var html = '';
+                    data.results.forEach(function(item) {
+                        html += '<a href="' + item.url + '" class="fh-search-item">';
+                        if (item.image) {
+                            html += '<img src="' + item.image + '" alt="' + item.name + '">';
+                        } else {
+                            html += '<div style="width:44px; height:44px; background:#f0f0f0; border-radius:6px; display:flex; align-items:center; justify-content:center;"><i class="bi bi-image text-muted"></i></div>';
+                        }
+                        html += '<div class="fh-search-item-info">';
+                        html += '<div class="fh-search-item-title">' + item.name + '</div>';
+                        html += '<div class="fh-search-item-meta"><strong class="text-danger">₹' + item.price + '</strong> &nbsp;•&nbsp; <span class="badge bg-light text-dark">' + item.category + '</span></div>';
+                        html += '</div>';
+                        html += '<i class="bi bi-chevron-right text-muted small"></i>';
+                        html += '</a>';
+                    });
+
+                    // Search all link
+                    html += '<a href="/search/?q=' + encodeURIComponent(query) + '" class="d-block p-2 text-center text-primary fw-semibold small bg-light text-decoration-none">See all results for "' + query + '" →</a>';
+
+                    dropdown.innerHTML = html;
+                    dropdown.style.display = 'block';
+                })
+                .catch(function() {
+                    dropdown.style.display = 'none';
+                });
+        }, 220);
+    });
+
+    // Close on outside click
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+})();
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

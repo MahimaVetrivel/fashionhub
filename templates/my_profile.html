@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Account &amp; Delivery Address - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 900px;">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">My Profile</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-person-circle text-danger me-2"></i> My Account &amp; Address</h3>
+            <p class="text-muted small mb-0">Manage your personal profile and default shipping address for quick checkout.</p>
+        </div>
+        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold">
+            <i class="bi bi-box-arrow-right me-1"></i> Logout
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN: EDIT PROFILE & ADDRESS FORM -->
+        <div class="col-lg-7">
+            <div class="bg-white rounded-4 shadow-sm border p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <h5 class="fw-bold mb-0">Personal &amp; Delivery Details</h5>
+                    <span class="badge bg-success-subtle text-success fw-bold">Permanent Saved Address</span>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Username</label>
+                            <input type="text" class="form-control bg-light" value="{{ request.user.username }}" readonly disabled>
+                            <div class="form-text" style="font-size: 0.72rem;">User ID is permanently linked.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Full Name *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="full_name"
+                                   value="{{ profile.full_name }}"
+                                   placeholder="Your Full Name"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Email Address *</label>
+                            <input type="email"
+                                   class="form-control"
+                                   name="email"
+                                   value="{{ request.user.email }}"
+                                   placeholder="email@example.com"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Mobile Number *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">+91</span>
+                                <input type="tel"
+                                       class="form-control"
+                                       name="mobile"
+                                       value="{{ profile.mobile }}"
+                                       placeholder="10 digit mobile"
+                                       maxlength="10"
+                                       required>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Permanent Delivery Address *</label>
+                            <textarea class="form-control"
+                                      name="address"
+                                      rows="2"
+                                      placeholder="Door / Flat No., Street, Landmark, Area..."
+                                      required>{{ profile.address }}</textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">City / District *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="city"
+                                   value="{{ profile.city }}"
+                                   placeholder="e.g. Chennai, Coimbatore"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">PIN Code *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="pincode"
+                                   value="{{ profile.pincode }}"
+                                   placeholder="6 digit pincode"
+                                   maxlength="6"
+                                   required>
+                        </div>
+
+                        <div class="col-12 mt-4">
+                            <button type="submit" class="btn btn-danger w-100 py-2 rounded-pill fw-bold fs-6">
+                                <i class="bi bi-save me-1"></i> Save Changes &amp; Default Address
+                            </button>
+                            <div class="small text-muted text-center mt-2">
+                                ✓ This address will be automatically loaded every time you log in and checkout.
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: ACCOUNT QUICK INFO & RECENT ORDERS -->
+        <div class="col-lg-5">
+
+            <!-- ADDRESS CARD PREVIEW -->
+            <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Saved Delivery Card</h6>
+                {% if profile.address %}
+                <div class="p-3 bg-light rounded-3 border">
+                    <strong class="d-block text-dark">{{ profile.full_name|default:request.user.username }}</strong>
+                    <div class="text-secondary small mt-1">
+                        {{ profile.address }}<br>
+                        {{ profile.city }} - {{ profile.pincode }}
+                    </div>
+                    <div class="small text-dark mt-2">
+                        <i class="bi bi-telephone me-1 text-danger"></i> +91 {{ profile.mobile|default:"Not added" }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-warning small mb-0">
+                    <i class="bi bi-exclamation-triangle me-1"></i> No delivery address saved yet. Please fill the form on the left to set your default shipping address.
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- RECENT ORDERS WIDGET -->
+            <div class="bg-white rounded-4 shadow-sm border p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-uppercase small text-muted mb-0"><i class="bi bi-box-seam me-1 text-danger"></i> Recent Orders</h6>
+                    <a href="{% url 'my_orders' %}" class="small text-danger text-decoration-none fw-semibold">View All →</a>
+                </div>
+
+                {% if recent_orders %}
+                <div class="d-flex flex-column gap-2">
+                    {% for order in recent_orders %}
+                    <div class="p-2 border rounded-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong class="small d-block text-dark">{{ order.order_number }}</strong>
+                            <small class="text-muted">{{ order.created_at|date:"d M Y" }} • ₹{{ order.total }}</small>
+                        </div>
+                        <a href="{% url 'track_order' order.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-2" style="font-size: 0.75rem;">
+                            Track
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="small text-muted mb-0">No past orders found.</p>
+                {% endif %}
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

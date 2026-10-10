@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FashionHub - Trending Clothes & Fashion Marketplace{% endblock %}
+
+{% block content %}
+
+<!-- HERO CAROUSEL / BANNER -->
+<section class="py-3">
+    <div class="container">
+        <div id="heroCarousel" class="carousel slide rounded-4 overflow-hidden shadow-sm" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1"></button>
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2"></button>
+            </div>
+            <div class="carousel-inner">
+                <!-- Slide 1 -->
+                <div class="carousel-item active" style="background: linear-gradient(135deg, #fff0f3, #ffe3e8); min-height: 380px;">
+                    <div class="row align-items-center h-100 p-4 p-md-5">
+                        <div class="col-md-7 ps-md-4">
+                            <span class="badge bg-danger px-3 py-2 rounded-pill text-uppercase mb-3 fw-bold">🔥 Grand Festive Sale 2026</span>
+                            <h1 class="display-5 fw-extrabold text-dark mb-3">
+                                Discover Your <span class="text-danger">Signature Style</span>
+                            </h1>
+                            <p class="lead text-muted mb-4 fs-6">
+                                Flat <strong>50% to 70% OFF</strong> on trending women's dresses, designer kurtas, and premium men's shirts.
+                            </p>
+                            <div class="d-flex flex-wrap gap-3">
+                                <a href="{% url 'category' 'Women' %}" class="btn btn-danger btn-lg px-4 py-2 rounded-pill fw-bold fs-6">
+                                    Shop Women Collection →
+                                </a>
+                                <a href="{% url 'category' 'Men' %}" class="btn btn-outline-dark btn-lg px-4 py-2 rounded-pill fw-semibold fs-6">
+                                    Shop Men's Wear
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-center d-none d-md-block">
+                            <img src="https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600"
+                                 class="img-fluid rounded-4 shadow-lg"
+                                 alt="Fashion Model"
+                                 style="max-height: 320px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 2 -->
+                <div class="carousel-item" style="background: linear-gradient(135deg, #e0f2fe, #bae6fd); min-height: 380px;">
+                    <div class="row align-items-center h-100 p-4 p-md-5">
+                        <div class="col-md-7 ps-md-4">
+                            <span class="badge bg-primary px-3 py-2 rounded-pill text-uppercase mb-3 fw-bold">⚡ Limited Time Deals</span>
+                            <h1 class="display-5 fw-extrabold text-dark mb-3">
+                                Upgrade Your Wardrobe with <span class="text-primary">Top Picks</span>
+                            </h1>
+                            <p class="lead text-muted mb-4 fs-6">
+                                Premium fabrics, handpicked seasonal fits, and exclusive kids fashion wear at factory-direct rates.
+                            </p>
+                            <div class="d-flex flex-wrap gap-3">
+                                <a href="{% url 'category' 'Kids' %}" class="btn btn-primary btn-lg px-4 py-2 rounded-pill fw-bold fs-6">
+                                    Kids Store →
+                                </a>
+                                <a href="{% url 'search' %}?sort=price_asc" class="btn btn-outline-dark btn-lg px-4 py-2 rounded-pill fw-semibold fs-6">
+                                    Under ₹999 Deals
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-5 text-center d-none d-md-block">
+                            <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600"
+                                 class="img-fluid rounded-4 shadow-lg"
+                                 alt="Men Fashion"
+                                 style="max-height: 320px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slide 3 -->
+                <div class="carousel-item" style="background: linear-gradient(135deg, #fef3c7, #fde68a); min-height: 380px;">
+                    <div class="row align-items-center h-100 p-4 p-md-5">
+                        <div class="col-md-7 ps-md-4">
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill text-uppercase mb-3 fw-bold">🎉 Special Offer</span>
+                            <h1 class="display-5 fw-extrabold text-dark mb-3">
+                                Extra 15% OFF on <span class="text-dark">UPI &amp; Card Payments</span>
+                            </h1>
+                            <p class="lead text-muted mb-4 fs-6">
+                                Instant checkout with PhonePe, Google Pay, or Credit/Debit card. Plus Free Delivery across India!
+                            </p>
+                            <a href="{% url 'home' %}#trending" class="btn btn-dark btn-lg px-4 py-2 rounded-pill fw-bold fs-6">
+                                Explore Trending Now →
+                            </a>
+                        </div>
+                        <div class="col-md-5 text-center d-none d-md-block">
+                            <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600"
+                                 class="img-fluid rounded-4 shadow-lg"
+                                 alt="Shopping"
+                                 style="max-height: 320px; object-fit: cover;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon p-3 bg-dark rounded-circle" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon p-3 bg-dark rounded-circle" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+</section>
+
+<!-- POPULAR CATEGORIES (Flipkart Style Cards) -->
+<section class="py-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-3">
+            <div>
+                <h4 class="fw-bold mb-1">Shop by Category</h4>
+                <p class="text-muted small mb-0">Handpicked collections for every occasion</p>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <!-- Women -->
+            <div class="col-6 col-md-4">
+                <a href="{% url 'category' 'Women' %}" class="card border-0 shadow-sm rounded-4 overflow-hidden text-decoration-none text-white h-100 position-relative group-hover">
+                    <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=600"
+                         class="card-img" alt="Women"
+                         style="height: 220px; object-fit: cover; filter: brightness(0.75);">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-3">
+                        <span class="badge bg-danger mb-1 align-self-start">Up to 60% OFF</span>
+                        <h4 class="card-title fw-bold mb-1">Women</h4>
+                        <span class="small opacity-90">Dresses, Kurtas &amp; Tops →</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Men -->
+            <div class="col-6 col-md-4">
+                <a href="{% url 'category' 'Men' %}" class="card border-0 shadow-sm rounded-4 overflow-hidden text-decoration-none text-white h-100 position-relative group-hover">
+                    <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600"
+                         class="card-img" alt="Men"
+                         style="height: 220px; object-fit: cover; filter: brightness(0.75);">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-3">
+                        <span class="badge bg-primary mb-1 align-self-start">Min 40% OFF</span>
+                        <h4 class="card-title fw-bold mb-1">Men</h4>
+                        <span class="small opacity-90">Shirts, Trousers &amp; Casuals →</span>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Kids -->
+            <div class="col-12 col-md-4">
+                <a href="{% url 'category' 'Kids' %}" class="card border-0 shadow-sm rounded-4 overflow-hidden text-decoration-none text-white h-100 position-relative group-hover">
+                    <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=600"
+                         class="card-img" alt="Kids"
+                         style="height: 220px; object-fit: cover; filter: brightness(0.75);">
+                    <div class="card-img-overlay d-flex flex-column justify-content-end p-3">
+                        <span class="badge bg-success mb-1 align-self-start">Flat 50% OFF</span>
+                        <h4 class="card-title fw-bold mb-1">Kids</h4>
+                        <span class="small opacity-90">Dresses, Sets &amp; Playwear →</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TRENDING COLLECTION / DEALS OF THE DAY -->
+<section class="py-4" id="trending">
+    <div class="container">
+
+        <!-- SECTION HEADER -->
+        <div class="bg-white p-3 p-md-4 rounded-4 shadow-sm border mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="badge bg-danger rounded-pill px-3 py-1"><i class="bi bi-lightning-charge-fill me-1"></i> DEAL OF THE DAY</span>
+                    <span class="text-danger fw-bold small d-inline-flex align-items-center"><i class="bi bi-clock-history me-1"></i> Ends in <span id="dealCountdown" class="badge bg-danger text-white font-monospace px-2 py-1 rounded ms-1 shadow-sm" style="letter-spacing: 0.5px;">08h : 34m : 19s</span></span>
+                </div>
+                <h3 class="fw-bold text-dark mt-2 mb-0">Trending Dress &amp; Fashion Collection</h3>
+            </div>
+            <a href="{% url 'search' %}?sort=popular" class="btn btn-outline-danger px-4 rounded-pill fw-semibold">
+                View All Deals →
+            </a>
+        </div>
+
+        <!-- AMAZON & FLIPKART STYLE PRODUCT CARDS -->
+        <div class="fh-product-grid">
+            {% for product in products %}
+            <div class="fh-product-card">
+
+                <!-- IMAGE & BADGES -->
+                <div class="fh-card-img-wrap">
+                    <span class="fh-card-tag {% if forloop.counter|divisibleby:3 %}hot{% elif forloop.counter|divisibleby:2 %}bestseller{% endif %}">
+                        {% if forloop.counter|divisibleby:3 %}Hot Deal{% elif forloop.counter|divisibleby:2 %}Bestseller{% else %}Special Price{% endif %}
+                    </span>
+
+                    <!-- WISHLIST HEART BUTTON -->
+                    <a href="{% url 'toggle_wishlist' product.id %}"
+                       class="wish-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                       title="Wishlist">
+                        <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                    </a>
+
+                    <a href="{% url 'product_detail' product.id %}">
+                        <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                    </a>
+                </div>
+
+                <!-- CARD BODY -->
+                <div class="fh-card-body">
+                    <span class="fh-card-cat">{{ product.category }}</span>
+                    <a href="{% url 'product_detail' product.id %}" class="fh-card-title" title="{{ product.name }}">
+                        {{ product.name }}
+                    </a>
+
+                    <!-- RATING PILL -->
+                    <div class="fh-rating-row">
+                        <span class="fh-rating-badge">
+                            {{ product.rating }} <i class="bi bi-star-fill"></i>
+                        </span>
+                        <span class="fh-rating-count">({{ product.reviews_count }})</span>
+                    </div>
+
+                    <!-- PRICE -->
+                    <div class="fh-price-wrap">
+                        <span class="fh-current-price">₹{{ product.price }}</span>
+                        <span class="fh-mrp-price">₹{{ product.original_price }}</span>
+                        <span class="fh-discount-pct">{{ product.discount_percent }}% off</span>
+                    </div>
+
+                    <div class="fh-delivery-note">
+                        <i class="bi bi-truck me-1"></i> FREE Delivery by Tomorrow
+                    </div>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="fh-card-actions">
+                        <button type="button"
+                                class="fh-btn-cart ajax-add-cart"
+                                data-url="{% url 'add_to_cart' product.id %}">
+                            <i class="bi bi-cart-plus"></i> Add to Cart
+                        </button>
+                        <a href="{% url 'product_detail' product.id %}" class="fh-btn-view" title="Quick View">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    </div>
+</section>
+
+<!-- PROMOTIONAL BANNER STRIP -->
+<section class="py-4">
+    <div class="container">
+        <div class="p-4 p-md-5 rounded-4 shadow-sm text-white position-relative overflow-hidden"
+             style="background: linear-gradient(135deg, #1f2937, #111827);">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">Festive Bonanza</span>
+                    <h2 class="display-6 fw-bold mb-2">Flat 10% Extra Discount via UPI</h2>
+                    <p class="lead opacity-90 fs-6 mb-3">
+                        Use Google Pay, PhonePe, or Paytm during checkout and get instant cashback and verified rewards on your order.
+                    </p>
+                    <a href="{% url 'home' %}#trending" class="btn btn-danger btn-lg px-4 rounded-pill fw-bold fs-6">
+                        Claim Offer &amp; Shop Now →
+                    </a>
+                </div>
+                <div class="col-lg-4 text-center d-none d-lg-block">
+                    <div class="p-3 bg-white bg-opacity-10 rounded-4 border border-white border-opacity-25 d-inline-block">
+                        <div class="fs-1 fw-bold text-warning">₹200 OFF</div>
+                        <div class="small text-white">On Orders Above ₹999</div>
+                        <div class="badge bg-light text-dark mt-2">CODE: FASHION2026</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- NEWSLETTER SUBSCRIBE -->
+<section class="py-5 bg-white border-top border-bottom">
+    <div class="container text-center" style="max-width: 650px;">
+        <i class="bi bi-envelope-paper-heart text-danger display-4 mb-2 d-inline-block"></i>
+        <h3 class="fw-bold mb-2">Stay Ahead with the Latest Trends</h3>
+        <p class="text-muted small mb-4">
+            Subscribe to receive insider alerts on flash sales, new ethnic collections, and exclusive coupons directly to your inbox.
+        </p>
+        <form class="d-flex gap-2" onsubmit="event.preventDefault(); showToast({title: 'Subscribed! 🎉', message: 'You have been subscribed to FashionHub deals.', type: 'success'});">
+            <input type="email" class="form-control form-control-lg rounded-pill px-4" placeholder="Enter your email address..." required>
+            <button type="submit" class="btn btn-danger btn-lg rounded-pill px-4 fw-bold text-nowrap">
+                Subscribe
+            </button>
+        </form>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Real-Time Countdown Timer for Deal of the Day (Synced with Midnight)
+(function() {
+    function updateCountdown() {
+        var timerEl = document.getElementById('dealCountdown');
+        if (!timerEl) return;
+
+        var now = new Date();
+        var midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+        var diffSec = Math.floor((midnight - now) / 1000);
+        if (diffSec < 0) diffSec = 0;
+
+        var h = Math.floor(diffSec / 3600);
+        var m = Math.floor((diffSec % 3600) / 60);
+        var s = diffSec % 60;
+
+        timerEl.textContent =
+            (h < 10 ? '0' + h : h) + 'h : ' +
+            (m < 10 ? '0' + m : m) + 'm : ' +
+            (s < 10 ? '0' + s : s) + 's';
+    }
+
+    // Run immediately so there's zero initial delay
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+})();
+</script>
+{% endblock %}

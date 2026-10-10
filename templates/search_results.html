@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Search results for "{{ query|default:'Products' }}" - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Search</li>
+            {% if query %}
+            <li class="breadcrumb-item active text-primary" aria-current="page">"{{ query }}"</li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+
+        <!-- LEFT SIDEBAR: FILTERS -->
+        <div class="col-lg-3">
+            <div class="bg-white p-3 rounded-3 shadow-sm border sticky-top" style="top: 80px; z-index: 10;">
+                <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-funnel me-1 text-danger"></i> Filters</h6>
+                    <a href="{% url 'search' %}?q={{ query }}" class="small text-danger text-decoration-none fw-semibold">Clear All</a>
+                </div>
+
+                <!-- CATEGORIES FILTER -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Category</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{% url 'search' %}?q={{ query }}&category=All"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if not selected_category or selected_category == 'All' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>All Categories</span>
+                        </a>
+                        <a href="{% url 'search' %}?q={{ query }}&category=Women"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if selected_category == 'Women' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Women</span>
+                        </a>
+                        <a href="{% url 'search' %}?q={{ query }}&category=Men"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if selected_category == 'Men' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Men</span>
+                        </a>
+                        <a href="{% url 'search' %}?q={{ query }}&category=Kids"
+                           class="d-flex justify-content-between align-items-center text-decoration-none px-2 py-1 rounded small {% if selected_category == 'Kids' %}bg-danger-subtle text-danger fw-bold{% else %}text-dark{% endif %}">
+                            <span>Kids</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- PRICE RANGE FILTER -->
+                <div class="mb-4">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Price</h6>
+                    <div class="d-flex flex-column gap-2 small">
+                        <a href="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&max_price=500"
+                           class="text-decoration-none text-dark py-1">Under ₹500</a>
+                        <a href="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&min_price=500&max_price=1000"
+                           class="text-decoration-none text-dark py-1">₹500 - ₹1,000</a>
+                        <a href="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&min_price=1000&max_price=2000"
+                           class="text-decoration-none text-dark py-1">₹1,000 - ₹2,000</a>
+                        <a href="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&min_price=2000"
+                           class="text-decoration-none text-dark py-1">Over ₹2,000</a>
+                    </div>
+
+                    <!-- Custom Price Form -->
+                    <form action="{% url 'search' %}" method="GET" class="mt-2 pt-2 border-top">
+                        <input type="hidden" name="q" value="{{ query }}">
+                        <input type="hidden" name="category" value="{{ selected_category }}">
+                        <div class="input-group input-group-sm mb-2">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ min_price }}">
+                            <span class="input-group-text">to</span>
+                            <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ max_price }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">Apply Price</button>
+                    </form>
+                </div>
+
+                <!-- DISCOUNT FILTER -->
+                <div class="mb-3">
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Discount</h6>
+                    <div class="d-flex flex-column gap-2 small text-muted">
+                        <div><input type="checkbox" id="d50" checked disabled> <label for="d50">30% or more</label></div>
+                        <div><input type="checkbox" id="d70" checked disabled> <label for="d70">50% or more</label></div>
+                    </div>
+                </div>
+
+                <!-- CUSTOMER RATINGS -->
+                <div>
+                    <h6 class="fw-semibold small text-uppercase text-muted mb-2">Customer Rating</h6>
+                    <div class="d-flex flex-column gap-1 small">
+                        <span class="text-warning">★ ★ ★ ★ ☆ <small class="text-dark">&amp; up</small></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: PRODUCT RESULTS -->
+        <div class="col-lg-9">
+
+            <!-- HEADER BAR WITH COUNT & SORT -->
+            <div class="bg-white p-3 rounded-3 shadow-sm border mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3">
+                <div>
+                    <h5 class="fw-bold mb-1">
+                        {% if query %}
+                        Results for "<span class="text-danger">{{ query }}</span>"
+                        {% elif selected_category and selected_category != 'All' %}
+                        {{ selected_category }} Collection
+                        {% else %}
+                        All Products
+                        {% endif %}
+                    </h5>
+                    <small class="text-muted">Showing {{ total_count }} item{{ total_count|pluralize }}</small>
+                </div>
+
+                <!-- SORT OPTIONS (Amazon / Flipkart Style) -->
+                <div class="d-flex align-items-center gap-2">
+                    <span class="small fw-semibold text-muted text-nowrap">Sort by:</span>
+                    <select class="form-select form-select-sm" style="width: auto;" onchange="location = this.value;">
+                        <option value="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&sort=popular" {% if selected_sort == 'popular' or not selected_sort %}selected{% endif %}>Popularity</option>
+                        <option value="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&sort=price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&sort=price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="{% url 'search' %}?q={{ query }}&category={{ selected_category }}&sort=newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- PRODUCT GRID -->
+            {% if products %}
+            <div class="fh-product-grid">
+                {% for product in products %}
+                <div class="fh-product-card">
+                    <div class="fh-card-img-wrap">
+                        <span class="fh-card-tag {% if forloop.counter|divisibleby:3 %}hot{% elif forloop.counter|divisibleby:2 %}bestseller{% endif %}">
+                            {% if forloop.counter|divisibleby:3 %}Hot Deal{% elif forloop.counter|divisibleby:2 %}Bestseller{% else %}Special Price{% endif %}
+                        </span>
+
+                        <!-- WISHLIST HEART BUTTON -->
+                        <a href="{% url 'toggle_wishlist' product.id %}"
+                           class="wish-btn {% if product.id in wishlist_ids %}active{% endif %}"
+                           title="Wishlist">
+                            <i class="bi {% if product.id in wishlist_ids %}bi-heart-fill text-danger{% else %}bi-heart{% endif %}"></i>
+                        </a>
+
+                        <a href="{% url 'product_detail' product.id %}">
+                            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+                        </a>
+                    </div>
+
+                    <div class="fh-card-body">
+                        <span class="fh-card-cat">{{ product.category }}</span>
+                        <a href="{% url 'product_detail' product.id %}" class="fh-card-title" title="{{ product.name }}">
+                            {{ product.name }}
+                        </a>
+
+                        <!-- RATING PILL (Flipkart style) -->
+                        <div class="fh-rating-row">
+                            <span class="fh-rating-badge">
+                                {{ product.rating }} <i class="bi bi-star-fill"></i>
+                            </span>
+                            <span class="fh-rating-count">({{ product.reviews_count }})</span>
+                        </div>
+
+                        <!-- PRICE SECTION -->
+                        <div class="fh-price-wrap">
+                            <span class="fh-current-price">₹{{ product.price }}</span>
+                            <span class="fh-mrp-price">₹{{ product.original_price }}</span>
+                            <span class="fh-discount-pct">{{ product.discount_percent }}% off</span>
+                        </div>
+
+                        <div class="fh-delivery-note">
+                            <i class="bi bi-truck me-1"></i> FREE Delivery by Tomorrow
+                        </div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div class="fh-card-actions">
+                            <button type="button"
+                                    class="fh-btn-cart ajax-add-cart"
+                                    data-url="{% url 'add_to_cart' product.id %}">
+                                <i class="bi bi-cart-plus"></i> Add to Cart
+                            </button>
+                            <a href="{% url 'product_detail' product.id %}" class="fh-btn-view" title="View details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% else %}
+            <!-- EMPTY SEARCH RESULTS STATE -->
+            <div class="bg-white rounded-3 shadow-sm border p-5 text-center my-4">
+                <div style="font-size: 3.5rem;">🔍</div>
+                <h4 class="fw-bold mt-3">No Products Found</h4>
+                <p class="text-muted" style="max-width: 500px; margin: 0 auto;">
+                    We couldn't find any products matching "<strong>{{ query }}</strong>".
+                    Try checking your spelling or search using more general terms like "dress", "shirt", or "women".
+                </p>
+                <div class="mt-4 d-flex justify-content-center gap-3">
+                    <a href="{% url 'home' %}" class="btn btn-danger px-4">Browse All Products</a>
+                    <a href="{% url 'category' 'Women' %}" class="btn btn-outline-dark px-4">Women's Fashion</a>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

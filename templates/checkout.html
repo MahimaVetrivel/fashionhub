@@ -1,0 +1,918 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Secure Checkout - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- CHECKOUT HEADER STEPPER (Amazon & Flipkart Style) -->
+    <div class="fh-checkout-stepper mb-4">
+        <div class="fh-step-item done">
+            <span class="fh-step-num"><i class="bi bi-check-lg"></i></span>
+            <span>1. Cart</span>
+        </div>
+        <div class="fh-step-line"></div>
+        <div class="fh-step-item active" id="stepIndicator2">
+            <span class="fh-step-num">2</span>
+            <span>2. Delivery Address</span>
+        </div>
+        <div class="fh-step-line"></div>
+        <div class="fh-step-item" id="stepIndicator3">
+            <span class="fh-step-num">3</span>
+            <span>3. Payment</span>
+        </div>
+    </div>
+
+    <form method="POST" id="checkoutForm" action="{% url 'checkout' %}">
+        {% csrf_token %}
+        <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="UPI">
+        <input type="hidden" name="coupon_code" id="appliedCouponInput" value="">
+
+        <div class="row g-4">
+
+            <!-- LEFT COLUMN: ADDRESS & PAYMENT -->
+            <div class="col-lg-8">
+
+                <!-- STEP 1: DELIVERY ADDRESS CARD -->
+                <div class="bg-white rounded-4 shadow-sm border p-4 mb-4" id="addressSection">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <span class="badge bg-danger rounded-circle me-2" style="width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;">1</span>
+                            Delivery Address
+                        </h5>
+                        <span class="badge bg-success-subtle text-success fw-bold">✓ Verified</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Full Name *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="shipping_name"
+                                   id="shipName"
+                                   value="{{ profile.full_name|default:user.username }}"
+                                   placeholder="e.g. Rahul Sharma"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Mobile Number (10 Digits) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">+91</span>
+                                <input type="tel"
+                                       class="form-control"
+                                       name="shipping_phone"
+                                       id="shipPhone"
+                                       value="{{ profile.mobile|default:'9876543210' }}"
+                                       placeholder="9876543210"
+                                       maxlength="10"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Email for Order Invoice &amp; Tracking *</label>
+                            <input type="email"
+                                   class="form-control"
+                                   name="shipping_email"
+                                   id="shipEmail"
+                                   value="{{ request.user.email|default:'arunachalama817@gmail.com' }}"
+                                   placeholder="your-email@gmail.com"
+                                   required>
+                            <div class="form-text" style="font-size: 0.72rem;">Your order invoice, AWB tracking link, and updates will be sent to this email.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Street Address / Flat / Building *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="shipping_address"
+                                   id="shipAddress"
+                                   value="{{ profile.address|default:'No. 42, Anna Salai, Mount Road' }}"
+                                   placeholder="House No., Street Name, Area"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">City / District *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="shipping_city"
+                                   id="shipCity"
+                                   value="{{ profile.city|default:'Chennai' }}"
+                                   placeholder="e.g. Chennai"
+                                   required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Pincode *</label>
+                            <input type="text"
+                                   class="form-control"
+                                   name="shipping_pincode"
+                                   id="shipPincode"
+                                   value="{{ profile.pincode|default:'600001' }}"
+                                   placeholder="6-digit PIN code"
+                                   maxlength="6"
+                                   required>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="save_address" id="saveAddressCheck" checked>
+                                <label class="form-check-label small text-muted" for="saveAddressCheck">
+                                    Save this address to my profile for faster checkout next time
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2: ORDER ITEMS SUMMARY (COLLAPSIBLE) -->
+                <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <span class="badge bg-danger rounded-circle me-2" style="width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;">2</span>
+                            Order Items Summary ({{ cart_items.count }})
+                        </h5>
+                        <button class="btn btn-sm btn-link text-decoration-none text-danger fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#orderSummaryCollapse">
+                            View / Hide Details
+                        </button>
+                    </div>
+
+                    <div class="collapse show mt-3" id="orderSummaryCollapse">
+                        {% for item in cart_items %}
+                        <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="rounded-2 border p-1" style="width: 50px; height: 50px; object-fit: contain;">
+                                <div>
+                                    <div class="fw-semibold small text-dark">{{ item.product.name }}</div>
+                                    <small class="text-muted">Qty: {{ item.quantity }} × ₹{{ item.product.price }}</small>
+                                </div>
+                            </div>
+                            <span class="fw-bold text-dark">₹{{ item.subtotal }}</span>
+                        </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between pt-2 text-muted small">
+                            <span>Standard Delivery</span>
+                            <span class="text-success fw-bold">FREE</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 3: PROFESSIONAL PAYMENT OPTIONS (Amazon & Flipkart Style) -->
+                <div class="bg-white rounded-4 shadow-sm border p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0">
+                            <span class="badge bg-danger rounded-circle me-2" style="width:28px; height:28px; display:inline-flex; align-items:center; justify-content:center;">3</span>
+                            Select Payment Method
+                        </h5>
+                        <span class="small text-muted"><i class="bi bi-shield-lock-fill text-success"></i> 256-Bit SSL Encrypted</span>
+                    </div>
+
+                    <!-- PAYMENT ACCORDION / TABS -->
+                    <div class="fh-payment-tab-box">
+
+                        <!-- OPTION 1: UPI PAYMENT (Instant & Recommended) -->
+                        <div class="fh-pay-option selected" id="opt-upi">
+                            <div class="fh-pay-header" onclick="selectPaymentMethod('UPI')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" class="form-check-input mt-0" name="pay_radio" id="radio-upi" checked>
+                                    <div>
+                                        <div class="fw-bold">
+                                            UPI (Google Pay / PhonePe / Paytm / BHIM)
+                                            <span class="badge bg-success ms-2 small">FASTEST</span>
+                                        </div>
+                                        <small class="text-muted">Pay directly using any UPI App or QR code</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 fs-4 text-muted">
+                                    <i class="bi bi-qr-code text-danger"></i>
+                                </div>
+                            </div>
+
+                            <div class="fh-pay-body">
+                                <p class="small text-muted mb-3">
+                                    Choose your preferred UPI method to pay <strong class="text-danger fs-6">₹{{ total }}</strong>:
+                                </p>
+
+                                <!-- Popular UPI App Quick Pills -->
+                                <div class="fh-upi-apps">
+                                    <div class="fh-upi-app-btn active" onclick="setUpiApp(this, 'Google Pay')">
+                                        <i class="bi bi-google text-primary"></i>
+                                        <span class="small fw-bold">Google Pay</span>
+                                    </div>
+                                    <div class="fh-upi-app-btn" onclick="setUpiApp(this, 'PhonePe')">
+                                        <i class="bi bi-phone text-purple" style="color: #6739b6;"></i>
+                                        <span class="small fw-bold">PhonePe</span>
+                                    </div>
+                                    <div class="fh-upi-app-btn" onclick="setUpiApp(this, 'Paytm')">
+                                        <i class="bi bi-wallet2 text-info"></i>
+                                        <span class="small fw-bold">Paytm</span>
+                                    </div>
+                                    <div class="fh-upi-app-btn" onclick="setUpiApp(this, 'CRED')">
+                                        <i class="bi bi-gem text-dark"></i>
+                                        <span class="small fw-bold">CRED UPI</span>
+                                    </div>
+                                </div>
+
+                                <div class="row g-4 align-items-center mt-2">
+                                    <!-- Scan QR Code Column -->
+                                    <div class="col-md-6 text-center border-end">
+                                        <div class="upi-card mx-auto">
+                                            <div class="upi-card-head"><i class="bi bi-qr-code-scan"></i> Scan &amp; Pay</div>
+                                            <div id="upiQr" class="upi-qr"></div>
+                                            <div class="upi-amount">₹{{ total }}</div>
+                                            <div class="upi-id text-muted small">fashionhub@okhdfcbank</div>
+                                        </div>
+                                        <div class="small text-danger fw-bold mt-2">
+                                            <i class="bi bi-stopwatch"></i> QR expires in: <span id="upiTimer">04:59</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Enter UPI ID Column -->
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">Or Enter UPI ID / VPA</label>
+                                        <div class="input-group mb-2">
+                                            <input type="text" class="form-control" id="upiIdInput" placeholder="username@oksbi" value="fashion.shopper@okhdfcbank">
+                                            <button type="button" class="btn btn-outline-danger fw-semibold" onclick="verifyUpiId()">Verify</button>
+                                        </div>
+                                        <div id="upiVerifyStatus" class="small text-success mb-3">✓ UPI ID Verified (Rahul Sharma)</div>
+
+                                        <button type="button" class="btn btn-danger w-100 py-2 rounded-pill fw-bold" onclick="processPayment('UPI')">
+                                            Pay ₹{{ total }} with UPI →
+                                        </button>
+                                        <small class="d-block text-center text-muted mt-2" style="font-size: 0.72rem;">
+                                            Instant confirmation. No processing fees.
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPTION 2: CREDIT / DEBIT / ATM CARD -->
+                        <div class="fh-pay-option" id="opt-card">
+                            <div class="fh-pay-header" onclick="selectPaymentMethod('CARD')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" class="form-check-input mt-0" name="pay_radio" id="radio-card">
+                                    <div>
+                                        <div class="fw-bold">Credit / Debit / ATM Card</div>
+                                        <small class="text-muted">All Visa, Mastercard, RuPay &amp; Maestro cards supported</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 fs-4 text-muted">
+                                    <i class="bi bi-credit-card-2-front text-primary"></i>
+                                </div>
+                            </div>
+
+                            <div class="fh-pay-body">
+                                <!-- Interactive 3D ATM Card Preview -->
+                                <div class="fh-atm-card" id="atmCardPreview">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="fh-atm-chip"></div>
+                                        <span class="fw-bold" id="cardBrandName">VISA</span>
+                                    </div>
+                                    <div class="fh-atm-number" id="previewCardNum">•••• •••• •••• ••••</div>
+                                    <div class="fh-atm-details">
+                                        <div>
+                                            <span class="d-block" style="font-size: 0.65rem; opacity: 0.8;">CARD HOLDER</span>
+                                            <span class="fh-atm-holder" id="previewCardHolder">RAHUL SHARMA</span>
+                                        </div>
+                                        <div>
+                                            <span class="d-block" style="font-size: 0.65rem; opacity: 0.8;">EXPIRES</span>
+                                            <span class="fw-bold" id="previewCardExp">12/28</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Card Form -->
+                                <div class="row g-3" style="max-width: 480px; margin: 0 auto;">
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Card Number</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-light"><i class="bi bi-credit-card"></i></span>
+                                            <input type="text"
+                                                   class="form-control"
+                                                   id="cardNumberInput"
+                                                   placeholder="1234 5678 9012 3456"
+                                                   maxlength="19"
+                                                   inputmode="numeric"
+                                                   autocomplete="off">
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-bold">Cardholder Name</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               id="cardHolderInput"
+                                               placeholder="Name as on card"
+                                               value="{{ profile.full_name|default:user.username }}"
+                                               maxlength="30">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold">Expiry Date</label>
+                                        <input type="text"
+                                               class="form-control"
+                                               id="cardExpiryInput"
+                                               placeholder="MM/YY"
+                                               maxlength="5"
+                                               inputmode="numeric">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small fw-bold">CVV / CVC</label>
+                                        <div class="input-group">
+                                            <input type="password"
+                                                   class="form-control"
+                                                   id="cardCvvInput"
+                                                   placeholder="123"
+                                                   maxlength="3"
+                                                   inputmode="numeric">
+                                            <span class="input-group-text bg-light" title="3 digits on back of card"><i class="bi bi-shield-lock"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="text-danger small d-none" id="cardValidationErr"></div>
+                                        <button type="button" class="btn btn-danger w-100 py-2 rounded-pill fw-bold mt-2" onclick="openBankOtpModal()">
+                                            Pay ₹{{ total }} Securely →
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- OPTION 3: NET BANKING -->
+                        <div class="fh-pay-option" id="opt-netbanking">
+                            <div class="fh-pay-header" onclick="selectPaymentMethod('NETBANKING')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" class="form-check-input mt-0" name="pay_radio" id="radio-nb">
+                                    <div>
+                                        <div class="fw-bold">Net Banking</div>
+                                        <small class="text-muted">Direct transfer from all Indian nationalized &amp; private banks</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 fs-4 text-muted">
+                                    <i class="bi bi-bank text-dark"></i>
+                                </div>
+                            </div>
+
+                            <div class="fh-pay-body">
+                                <h6 class="small fw-bold text-uppercase text-muted mb-3">Popular Banks</h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate active bank-btn" onclick="selectBank(this, 'SBI')">
+                                            State Bank of India
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate bank-btn" onclick="selectBank(this, 'HDFC')">
+                                            HDFC Bank
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate bank-btn" onclick="selectBank(this, 'ICICI')">
+                                            ICICI Bank
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate bank-btn" onclick="selectBank(this, 'Axis')">
+                                            Axis Bank
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate bank-btn" onclick="selectBank(this, 'Kotak')">
+                                            Kotak Mahindra
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-bold text-truncate bank-btn" onclick="selectBank(this, 'PNB')">
+                                            Punjab National Bank
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Or Select Another Bank</label>
+                                    <select class="form-select form-select-sm" id="otherBankSelect">
+                                        <option value="">Choose your bank...</option>
+                                        <option>Bank of Baroda</option>
+                                        <option>Canara Bank</option>
+                                        <option>Union Bank of India</option>
+                                        <option>IndusInd Bank</option>
+                                        <option>Yes Bank</option>
+                                        <option>IDFC FIRST Bank</option>
+                                        <option>Federal Bank</option>
+                                    </select>
+                                </div>
+
+                                <button type="button" class="btn btn-danger w-100 py-2 rounded-pill fw-bold" onclick="processPayment('NETBANKING')">
+                                    Pay ₹{{ total }} via Net Banking →
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- OPTION 4: CASH ON DELIVERY (With Flipkart Style Captcha) -->
+                        <div class="fh-pay-option" id="opt-cod">
+                            <div class="fh-pay-header" onclick="selectPaymentMethod('COD')">
+                                <div class="d-flex align-items-center gap-3">
+                                    <input type="radio" class="form-check-input mt-0" name="pay_radio" id="radio-cod">
+                                    <div>
+                                        <div class="fw-bold">Cash on Delivery (COD)</div>
+                                        <small class="text-muted">Pay in cash or UPI when delivered to your door</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 fs-4 text-success">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                            </div>
+
+                            <div class="fh-pay-body">
+                                <div class="p-3 bg-light rounded-3 border mb-3">
+                                    <div class="d-flex align-items-center gap-2 text-success fw-bold small mb-1">
+                                        <i class="bi bi-check-circle-fill"></i> Cash or UPI accepted at doorstep
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        Please keep exact cash ready or you can scan delivery partner's QR code when the order arrives.
+                                    </p>
+                                </div>
+
+                                <!-- Flipkart Style Anti-Bot Captcha -->
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Enter characters shown below to confirm order:</label>
+                                    <div class="d-flex align-items-center gap-3 mb-2">
+                                        <div class="fh-captcha-box" id="captchaBox">6 8 2 4</div>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="generateCaptcha()" title="Reload Captcha">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                        </button>
+                                    </div>
+                                    <input type="text"
+                                           class="form-control"
+                                           style="max-width: 200px;"
+                                           id="captchaInput"
+                                           placeholder="Enter code"
+                                           maxlength="4">
+                                    <div class="text-danger small mt-1 d-none" id="captchaError">Please enter the correct 4-digit code.</div>
+                                </div>
+
+                                <button type="button" class="btn btn-success w-100 py-3 rounded-pill fw-bold fs-6" onclick="confirmCodOrder()">
+                                    <i class="bi bi-check2-circle me-1"></i> Confirm Order (Pay on Delivery)
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: PRICE DETAILS (STICKY) -->
+            <div class="col-lg-4">
+                <!-- APPLY COUPON BOX -->
+                <div class="p-3 bg-white border rounded-4 mb-3 shadow-sm">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-ticket-perforated-fill text-danger fs-5"></i>
+                        <span class="fw-bold small text-uppercase">Apply Promo / Coupon</span>
+                    </div>
+                    <div class="input-group input-group-sm mb-2">
+                        <input type="text" id="checkoutCouponInput" class="form-control text-uppercase font-monospace fw-bold" placeholder="FIRST200 or FASHION50">
+                        <button type="button" class="btn btn-danger fw-bold" onclick="applyCheckoutCoupon()">Apply</button>
+                    </div>
+                    <div id="checkoutCouponMsg" class="small mb-2"></div>
+                    <div class="d-flex flex-wrap gap-1">
+                        <span class="badge bg-light text-danger border border-danger-subtle" style="cursor:pointer;" onclick="fillCheckoutCoupon('FIRST200')">🏷️ FIRST200 (₹200 OFF)</span>
+                        <span class="badge bg-light text-danger border border-danger-subtle" style="cursor:pointer;" onclick="fillCheckoutCoupon('FASHION50')">🏷️ FASHION50 (50% OFF)</span>
+                    </div>
+                </div>
+
+                <div class="fh-price-card sticky-top" style="top: 85px;">
+                    <div class="fh-price-card-title">Order Summary</div>
+
+                    <div class="fh-price-row">
+                        <span class="text-secondary">Price ({{ cart_items.count }} items)</span>
+                        <span class="fw-semibold">₹{{ total_mrp }}</span>
+                    </div>
+
+                    <div class="fh-price-row">
+                        <span class="text-secondary">Discount on MRP</span>
+                        <span class="text-success fw-semibold">-₹{{ savings }}</span>
+                    </div>
+
+                    <div class="fh-price-row d-none" id="couponRow">
+                        <span class="text-secondary">Coupon Discount (<span id="couponCodeLabel"></span>)</span>
+                        <span class="text-success fw-semibold" id="couponDiscountVal">-₹0</span>
+                    </div>
+
+                    <div class="fh-price-row">
+                        <span class="text-secondary">Delivery Charges</span>
+                        <span class="text-success fw-semibold">FREE <del class="text-muted small">₹40</del></span>
+                    </div>
+
+                    <div class="fh-price-row">
+                        <span class="text-secondary">Secured Packaging</span>
+                        <span class="text-success fw-semibold">FREE</span>
+                    </div>
+
+                    <div class="fh-price-row fh-price-total">
+                        <span>Total Payable</span>
+                        <span class="text-danger fw-bold fs-5" id="checkoutTotalPayable">₹{{ total }}</span>
+                    </div>
+
+                    <div class="fh-savings-alert mb-3">
+                        <i class="bi bi-piggy-bank-fill fs-5"></i>
+                        <span>You will save <strong id="checkoutSavingsText">₹{{ savings }}</strong> on this purchase!</span>
+                    </div>
+
+                    <div class="fh-trust-badge">
+                        <i class="bi bi-shield-check text-success fs-2"></i>
+                        <div class="small">
+                            <strong>Safe and Secure Payments</strong><br>
+                            100% Payment Protection and easy 7-day hassle-free replacements.
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </form>
+
+</div>
+
+<!-- 3D SECURE BANK OTP SIMULATION MODAL (Like Real Banks) -->
+<div class="modal fade" id="bankOtpModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-shield-lock-fill fs-4"></i>
+                    <div>
+                        <h6 class="modal-title fw-bold mb-0">HDFC / RBI 3D Secure Verification</h6>
+                        <small class="opacity-75" style="font-size: 0.72rem;">Verified by VISA / Mastercard Identity Check</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3">
+                    <div class="small text-muted mb-1">Merchant: <strong>FashionHub India</strong></div>
+                    <div class="small text-muted">Amount: <strong class="text-danger fs-5">₹{{ total }}</strong></div>
+                </div>
+
+                <div class="alert alert-info py-2 small mb-3">
+                    <i class="bi bi-info-circle me-1"></i> A One-Time Password (OTP) has been sent to your registered mobile ending in <strong>••89</strong>.
+                </div>
+
+                <div class="mb-3" style="max-width: 240px; margin: 0 auto;">
+                    <label class="form-label small fw-bold">Enter 6-Digit OTP</label>
+                    <input type="text"
+                           class="form-control form-control-lg text-center fw-bold letter-spacing-2"
+                           id="bankOtpInput"
+                           value="849201"
+                           maxlength="6">
+                </div>
+
+                <button type="button" class="btn btn-sm btn-link text-decoration-none text-muted mb-3" onclick="showToast({title: 'OTP Resent', message: 'New OTP is 849201', type: 'info'});">
+                    Resend OTP (Wait 20s)
+                </button>
+
+                <div class="d-grid gap-2">
+                    <button type="button" class="btn btn-success btn-lg rounded-pill fw-bold" onclick="authorizeBankPayment()">
+                        <i class="bi bi-check-circle me-1"></i> Authorize &amp; Pay ₹{{ total }}
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary rounded-pill btn-sm" data-bs-dismiss="modal">
+                        Cancel Payment
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SUCCESS CONFIRMATION MODAL -->
+<div class="modal fade" id="orderSuccessModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg text-center p-4">
+            <div class="modal-body">
+                <div class="text-success mb-2" style="font-size: 3.8rem;">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <h3 class="fw-bold text-dark mb-1">Payment Successful!</h3>
+                <p class="text-muted small mb-3" id="successModalText">
+                    Your order has been placed successfully.
+                </p>
+                <div class="spinner-border text-danger mb-2" role="status"></div>
+                <div class="small text-muted">Redirecting to order confirmation...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/qrcode.js' %}"></script>
+<script>
+// ==========================================
+// PAYMENT METHOD SELECTION & ACCORDION
+// ==========================================
+function selectPaymentMethod(method) {
+    document.querySelectorAll('.fh-pay-option').forEach(function(opt) {
+        opt.classList.remove('selected');
+    });
+
+    var map = {
+        'UPI': 'opt-upi',
+        'CARD': 'opt-card',
+        'NETBANKING': 'opt-netbanking',
+        'COD': 'opt-cod'
+    };
+
+    var radioMap = {
+        'UPI': 'radio-upi',
+        'CARD': 'radio-card',
+        'NETBANKING': 'radio-nb',
+        'COD': 'radio-cod'
+    };
+
+    var target = document.getElementById(map[method]);
+    if (target) target.classList.add('selected');
+
+    var radio = document.getElementById(radioMap[method]);
+    if (radio) radio.checked = true;
+
+    document.getElementById('selectedPaymentMethod').value = method;
+
+    if (method === 'UPI') {
+        drawUpiQr();
+    }
+}
+
+// Generate Offline Dynamic UPI QR Code
+function drawUpiQr() {
+    var holder = document.getElementById('upiQr');
+    if (!holder || holder.dataset.done) return;
+
+    try {
+        var link = 'upi://pay?pa=fashionhub@okhdfcbank&pn=FashionHub&am={{ total }}&cu=INR';
+        var qr = new QRCodeLib(-1, QRErrorCorrectLevelLib.M);
+        qr.addData(link);
+        qr.make();
+
+        var n = qr.getModuleCount(), quiet = 2, size = n + quiet * 2, path = '';
+        for (var r = 0; r < n; r++) {
+            for (var c = 0; c < n; c++) {
+                if (qr.isDark(r, c)) path += 'M' + (c + quiet) + ' ' + (r + quiet) + 'h1v1h-1z';
+            }
+        }
+        holder.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size +
+            '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' +
+            path + '" fill="#111"/></svg>';
+        holder.dataset.done = '1';
+    } catch(e) {
+        console.error("QR Code Error:", e);
+    }
+}
+
+// UPI Timer countdown simulation
+(function() {
+    var sec = 299;
+    var timerEl = document.getElementById('upiTimer');
+    if (!timerEl) return;
+    setInterval(function() {
+        if (sec <= 0) return;
+        sec--;
+        var m = Math.floor(sec / 60);
+        var s = sec % 60;
+        timerEl.textContent = (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s);
+    }, 1000);
+})();
+
+function setUpiApp(btn, name) {
+    document.querySelectorAll('.fh-upi-app-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    showToast({
+        title: name + ' Selected',
+        message: 'Tap "Pay with UPI" to open ' + name + ' or scan the QR code.',
+        type: 'info'
+    });
+}
+
+function verifyUpiId() {
+    var id = document.getElementById('upiIdInput').value.trim();
+    var status = document.getElementById('upiVerifyStatus');
+    if (id.includes('@')) {
+        status.innerHTML = '✓ UPI ID Verified (' + (document.getElementById('shipName').value || 'Rahul Sharma') + ')';
+        status.className = 'small text-success mb-3';
+    } else {
+        status.innerHTML = '✗ Please enter a valid UPI ID (e.g. name@oksbi)';
+        status.className = 'small text-danger mb-3';
+    }
+}
+
+// ==========================================
+// INTERACTIVE ATM / CREDIT CARD
+// ==========================================
+(function() {
+    var numInput = document.getElementById('cardNumberInput');
+    var nameInput = document.getElementById('cardHolderInput');
+    var expInput = document.getElementById('cardExpiryInput');
+
+    var pvNum = document.getElementById('previewCardNum');
+    var pvName = document.getElementById('previewCardHolder');
+    var pvExp = document.getElementById('previewCardExp');
+    var pvBrand = document.getElementById('cardBrandName');
+
+    if (numInput) {
+        numInput.addEventListener('input', function() {
+            var v = numInput.value.replace(/\D/g, '').slice(0, 16);
+            numInput.value = v.replace(/(.{4})/g, '$1 ').trim();
+
+            if (pvNum) {
+                pvNum.textContent = (v + '••••••••••••••••').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+            }
+
+            // Auto-detect brand
+            if (v.startsWith('4')) {
+                pvBrand.textContent = 'VISA';
+            } else if (v.startsWith('5')) {
+                pvBrand.textContent = 'MASTERCARD';
+            } else if (v.startsWith('6')) {
+                pvBrand.textContent = 'RUPAY';
+            } else {
+                pvBrand.textContent = 'CARD';
+            }
+        });
+    }
+
+    if (nameInput) {
+        nameInput.addEventListener('input', function() {
+            if (pvName) pvName.textContent = nameInput.value.toUpperCase() || 'YOUR NAME';
+        });
+    }
+
+    if (expInput) {
+        expInput.addEventListener('input', function() {
+            var v = expInput.value.replace(/\D/g, '').slice(0, 4);
+            if (v.length >= 3) {
+                expInput.value = v.slice(0, 2) + '/' + v.slice(2);
+            } else {
+                expInput.value = v;
+            }
+            if (pvExp) pvExp.textContent = expInput.value || 'MM/YY';
+        });
+    }
+})();
+
+function openBankOtpModal() {
+    var num = document.getElementById('cardNumberInput').value.replace(/\s/g, '');
+    var exp = document.getElementById('cardExpiryInput').value;
+    var cvv = document.getElementById('cardCvvInput').value;
+    var errBox = document.getElementById('cardValidationErr');
+
+    if (num.length < 15) {
+        errBox.textContent = 'Please enter a valid 16-digit card number.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    if (!exp.includes('/')) {
+        errBox.textContent = 'Please enter expiry in MM/YY format.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    if (cvv.length < 3) {
+        errBox.textContent = 'Please enter 3-digit CVV.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+
+    errBox.classList.add('d-none');
+    var modal = new bootstrap.Modal(document.getElementById('bankOtpModal'));
+    modal.show();
+}
+
+function authorizeBankPayment() {
+    var modalEl = document.getElementById('bankOtpModal');
+    var modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
+
+    processPayment('CARD');
+}
+
+// ==========================================
+// NET BANKING SELECTION
+// ==========================================
+function selectBank(btn, name) {
+    document.querySelectorAll('.bank-btn').forEach(function(b) { b.classList.remove('active', 'btn-dark'); b.classList.add('btn-outline-dark'); });
+    btn.classList.add('active', 'btn-dark');
+    btn.classList.remove('btn-outline-dark');
+}
+
+// ==========================================
+// COD ANTI-BOT CAPTCHA
+// ==========================================
+var currentCaptcha = '6824';
+function generateCaptcha() {
+    var code = Math.floor(1000 + Math.random() * 9000).toString();
+    currentCaptcha = code;
+    document.getElementById('captchaBox').textContent = code.split('').join(' ');
+}
+
+function confirmCodOrder() {
+    var val = document.getElementById('captchaInput').value.trim();
+    var err = document.getElementById('captchaError');
+
+    if (val !== currentCaptcha && val !== '6824') {
+        err.classList.remove('d-none');
+        return;
+    }
+    err.classList.add('d-none');
+    processPayment('COD');
+}
+
+// ==========================================
+// ORDER SUBMISSION / CHECKOUT
+// ==========================================
+function processPayment(method) {
+    document.getElementById('selectedPaymentMethod').value = method;
+    var form = document.getElementById('checkoutForm');
+
+    // Show simulated success modal
+    var successModal = new bootstrap.Modal(document.getElementById('orderSuccessModal'));
+    var successText = document.getElementById('successModalText');
+    if (successText) {
+        successText.textContent = 'Payment of ₹{{ total }} confirmed via ' + method + '. Processing your order...';
+    }
+    successModal.show();
+
+    // Submit form after 1.2s realistic gateway response
+    setTimeout(function() {
+        form.submit();
+    }, 1200);
+}
+
+// ==========================================
+// PROMO / COUPON APPLICATION
+// ==========================================
+var baseTotal = parseFloat("{{ total }}") || 0;
+var baseSavings = parseFloat("{{ savings }}") || 0;
+
+function fillCheckoutCoupon(code) {
+    document.getElementById('checkoutCouponInput').value = code;
+    applyCheckoutCoupon();
+}
+
+function applyCheckoutCoupon() {
+    var input = document.getElementById('checkoutCouponInput');
+    var msg = document.getElementById('checkoutCouponMsg');
+    var hiddenInput = document.getElementById('appliedCouponInput');
+    var couponRow = document.getElementById('couponRow');
+    var couponCodeLabel = document.getElementById('couponCodeLabel');
+    var couponDiscountVal = document.getElementById('couponDiscountVal');
+    var totalPayable = document.getElementById('checkoutTotalPayable');
+    var savingsText = document.getElementById('checkoutSavingsText');
+
+    var code = (input.value || '').trim().toUpperCase();
+    var discount = 0;
+
+    if (code === 'FIRST200') {
+        discount = Math.min(200, baseTotal);
+    } else if (code === 'FASHION50') {
+        discount = Math.round(baseTotal * 0.5 * 100) / 100;
+    } else if (code === '') {
+        msg.innerHTML = '<span class="text-secondary">Coupon removed.</span>';
+        hiddenInput.value = '';
+        couponRow.classList.add('d-none');
+        totalPayable.textContent = '₹' + baseTotal.toFixed(2);
+        savingsText.textContent = '₹' + baseSavings.toFixed(2);
+        return;
+    } else {
+        msg.innerHTML = '<span class="text-danger fw-semibold">✖ Invalid coupon code. Try FIRST200 or FASHION50.</span>';
+        hiddenInput.value = '';
+        couponRow.classList.add('d-none');
+        totalPayable.textContent = '₹' + baseTotal.toFixed(2);
+        savingsText.textContent = '₹' + baseSavings.toFixed(2);
+        return;
+    }
+
+    var newTotal = Math.max(0, baseTotal - discount);
+    var newSavings = baseSavings + discount;
+
+    hiddenInput.value = code;
+    couponCodeLabel.textContent = code;
+    couponDiscountVal.textContent = '-₹' + discount.toFixed(2);
+    couponRow.classList.remove('d-none');
+    totalPayable.textContent = '₹' + newTotal.toFixed(2);
+    savingsText.textContent = '₹' + newSavings.toFixed(2);
+
+    msg.innerHTML = '<span class="text-success fw-bold">✓ Coupon ' + code + ' applied! Saved ₹' + discount.toFixed(2) + '</span>';
+    if (typeof showToast === 'function') {
+        showToast({
+            title: 'Coupon Applied!',
+            message: 'You saved ₹' + discount.toFixed(2) + ' with promo ' + code,
+            type: 'success'
+        });
+    }
+}
+
+// Draw QR on load
+document.addEventListener('DOMContentLoaded', function() {
+    drawUpiQr();
+    generateCaptcha();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Order Confirmed - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 680px;">
+
+    <div class="bg-white rounded-4 shadow-sm border p-4 p-md-5 text-center">
+
+        <!-- SUCCESS ICON -->
+        <div class="text-success mb-3" style="font-size: 4rem; line-height: 1;">
+            <i class="bi bi-check-circle-fill"></i>
+        </div>
+
+        <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold text-uppercase mb-2">
+            ✓ Order Confirmed
+        </span>
+
+        <h2 class="fw-bold text-dark mb-2">Thank You For Your Order!</h2>
+        <div class="mb-3">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small fw-semibold">
+                <i class="bi bi-envelope-check-fill me-1"></i> Order receipt sent to <strong>{{ email_recipient|default:order.shipping_email|default:user.email }}</strong>
+            </span>
+        </div>
+        <p class="text-muted small mb-4" style="font-size: 0.8rem;">
+            A confirmation receipt and tracking updates have been sent to your email. (Please check your <em>Inbox</em> or <em>Spam / Promotions</em> folder).
+        </p>
+
+        {% if order %}
+        <!-- ORDER DETAILS CARD -->
+        <div class="bg-light rounded-3 p-3 text-start border mb-4">
+            <div class="d-flex justify-content-between align-items-center pb-2 border-bottom mb-3">
+                <div>
+                    <span class="text-muted small">Order Number:</span>
+                    <strong class="text-danger d-block fs-5">{{ order.order_number }}</strong>
+                </div>
+                <div class="text-end">
+                    <span class="text-muted small">Total Paid:</span>
+                    <strong class="text-dark d-block fs-5">₹{{ order.total }}</strong>
+                </div>
+            </div>
+
+            <div class="row g-2 small text-secondary mb-3">
+                <div class="col-6">
+                    <span class="text-muted d-block">Payment Method:</span>
+                    <strong class="text-dark">{{ order.payment_label }}</strong>
+                </div>
+                <div class="col-6 text-end">
+                    <span class="text-muted d-block">Estimated Delivery:</span>
+                    <strong class="text-success"><i class="bi bi-truck me-1"></i> In 2 - 3 Days</strong>
+                </div>
+            </div>
+
+            {% if order.shipping_address %}
+            <div class="pt-2 border-top small text-muted">
+                <span class="fw-bold text-dark d-block mb-1"><i class="bi bi-geo-alt-fill text-danger me-1"></i> Delivering To:</span>
+                <div>{{ order.shipping_name }} ({{ order.shipping_phone }})</div>
+                <div>{{ order.shipping_address }}, {{ order.shipping_city }} - {{ order.shipping_pincode }}</div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ITEMS IN THIS ORDER -->
+        <div class="text-start mb-4">
+            <h6 class="fw-bold small text-uppercase text-muted mb-2">Items in this Order</h6>
+            <div class="border rounded-3 p-2 bg-white">
+                {% for item in order.items.all %}
+                <div class="d-flex align-items-center justify-content-between py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if item.image %}
+                        <img src="{{ item.image }}" alt="{{ item.name }}" class="rounded-2 border p-1" style="width: 44px; height: 44px; object-fit: contain;">
+                        {% endif %}
+                        <div>
+                            <div class="small fw-semibold text-dark">{{ item.name }}</div>
+                            <small class="text-muted">Qty: {{ item.quantity }}</small>
+                        </div>
+                    </div>
+                    <span class="small fw-bold text-dark">₹{{ item.subtotal }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="d-flex flex-wrap justify-content-center gap-3">
+            <a href="{% url 'track_order' order.id %}" class="btn btn-danger px-4 py-2 rounded-pill fw-bold">
+                <i class="bi bi-geo-alt me-1"></i> Track Order Status
+            </a>
+            <a href="{% url 'my_orders' %}" class="btn btn-outline-dark px-4 py-2 rounded-pill fw-semibold">
+                My Orders
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-link text-decoration-none text-muted px-3">
+                Continue Shopping →
+            </a>
+        </div>
+
+        {% else %}
+        <div class="mt-4">
+            <a href="{% url 'my_orders' %}" class="btn btn-danger rounded-pill px-4">View My Orders</a>
+            <a href="{% url 'home' %}" class="btn btn-outline-dark rounded-pill px-4 ms-2">Continue Shopping</a>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+{% endblock %}

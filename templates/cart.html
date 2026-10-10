@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Shopping Cart ({{ cart_count }}) - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Shopping Cart</li>
+        </ol>
+    </nav>
+
+    {% if cart_items %}
+    <div class="row g-4">
+
+        <!-- LEFT COLUMN: CART ITEMS -->
+        <div class="col-lg-8">
+
+            <!-- FREE DELIVERY PROGRESS BAR -->
+            <div class="bg-white p-3 rounded-4 shadow-sm border mb-3 d-flex align-items-center gap-3">
+                <div class="fs-2 text-success"><i class="bi bi-shield-check"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-bold text-success small">Yay! You have unlocked FREE Delivery!</div>
+                    <div class="text-muted" style="font-size: 0.78rem;">No extra shipping charges apply to your order.</div>
+                </div>
+            </div>
+
+            <!-- CART ITEMS LIST -->
+            <div class="bg-white rounded-4 shadow-sm border overflow-hidden">
+                <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0">My Cart (<span id="cartCountHeader">{{ cart_count }}</span>)</h5>
+                    <span class="small text-muted"><i class="bi bi-geo-alt text-danger"></i> Deliver to Pincode: <strong>600001</strong></span>
+                </div>
+
+                <div id="cartItemsList">
+                    {% for item in cart_items %}
+                    <div class="p-3 p-md-4 border-bottom cart-item-row" id="cartRow-{{ item.id }}">
+                        <div class="row g-3 align-items-center">
+
+                            <!-- ITEM IMAGE -->
+                            <div class="col-3 col-md-2 text-center">
+                                <a href="{% url 'product_detail' item.product.id %}">
+                                    <img src="{{ item.product.image.url }}"
+                                         alt="{{ item.product.name }}"
+                                         class="img-fluid rounded-3 border p-1"
+                                         style="max-height: 110px; width: 100%; object-fit: contain;">
+                                </a>
+                            </div>
+
+                            <!-- ITEM DETAILS -->
+                            <div class="col-9 col-md-6">
+                                <span class="badge bg-light text-muted border mb-1 small">{{ item.product.category }}</span>
+                                <h6 class="fw-bold mb-1">
+                                    <a href="{% url 'product_detail' item.product.id %}" class="text-decoration-none text-dark">
+                                        {{ item.product.name }}
+                                    </a>
+                                </h6>
+                                <div class="small text-muted mb-2">Seller: FashionHub Retail • <span class="text-success fw-semibold">In Stock</span></div>
+
+                                <!-- PRICE -->
+                                <div class="d-flex align-items-baseline gap-2 mb-2">
+                                    <span class="fs-5 fw-bold text-dark item-subtotal" id="itemSubtotal-{{ item.id }}">₹{{ item.subtotal }}</span>
+                                    <span class="small text-muted text-decoration-line-through">₹{{ item.product.original_price }}</span>
+                                    <span class="small fw-bold text-success">{{ item.product.discount_percent }}% Off</span>
+                                </div>
+
+                                <div class="small text-muted">
+                                    <i class="bi bi-truck text-success me-1"></i> Delivery in 2 - 3 Days | <span class="text-success fw-bold">FREE</span>
+                                </div>
+                            </div>
+
+                            <!-- QUANTITY STEPPER & REMOVE -->
+                            <div class="col-12 col-md-4 d-flex flex-md-column justify-content-between align-items-md-end gap-2">
+                                <!-- Qty Box -->
+                                <div class="qty-box">
+                                    <button type="button"
+                                            class="qty-btn border-0 bg-transparent"
+                                            onclick="updateCartItem({{ item.id }}, 'decrease')">−</button>
+                                    <span class="qty-num" id="qtyVal-{{ item.id }}">{{ item.quantity }}</span>
+                                    <button type="button"
+                                            class="qty-btn border-0 bg-transparent"
+                                            onclick="updateCartItem({{ item.id }}, 'increase')">+</button>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="d-flex gap-3">
+                                    <a href="{% url 'toggle_wishlist' item.product.id %}"
+                                       class="small text-decoration-none text-secondary fw-semibold wish-btn"
+                                       title="Move to Wishlist">
+                                        <i class="bi bi-heart me-1"></i> Save
+                                    </a>
+                                    <button type="button"
+                                            class="btn btn-link btn-sm text-danger text-decoration-none p-0 fw-semibold"
+                                            onclick="updateCartItem({{ item.id }}, 'remove')">
+                                        <i class="bi bi-trash3 me-1"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="p-3 bg-light d-flex justify-content-between align-items-center">
+                    <a href="{% url 'home' %}" class="btn btn-outline-dark rounded-pill px-4 btn-sm fw-semibold">
+                        ← Continue Shopping
+                    </a>
+                    <a href="{% url 'checkout' %}" class="btn btn-danger rounded-pill px-4 fw-bold">
+                        Proceed to Checkout →
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: PRICE DETAILS (Flipkart Style Card) -->
+        <div class="col-lg-4">
+            <!-- APPLY COUPON BOX -->
+            <div class="p-3 bg-white border rounded-4 mb-3 shadow-sm">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-ticket-perforated-fill text-danger fs-5"></i>
+                    <span class="fw-bold small text-uppercase">Apply Promo / Coupon</span>
+                </div>
+                <div class="input-group input-group-sm mb-2">
+                    <input type="text" id="cartCouponInput" class="form-control text-uppercase font-monospace fw-bold" placeholder="FIRST200 or FASHION50">
+                    <button type="button" class="btn btn-danger fw-bold" onclick="applyCartCoupon()">Apply</button>
+                </div>
+                <div id="cartCouponMsg" class="small mb-2"></div>
+                <div class="d-flex flex-wrap gap-1">
+                    <span class="badge bg-light text-danger border border-danger-subtle" style="cursor:pointer;" onclick="fillCartCoupon('FIRST200')">🏷️ FIRST200 (₹200 OFF)</span>
+                    <span class="badge bg-light text-danger border border-danger-subtle" style="cursor:pointer;" onclick="fillCartCoupon('FASHION50')">🏷️ FASHION50 (50% OFF)</span>
+                </div>
+            </div>
+
+            <div class="fh-price-card sticky-top" style="top: 85px;">
+                <div class="fh-price-card-title">Price Details</div>
+
+                <div class="fh-price-row">
+                    <span class="text-secondary">Price (<span id="priceItemsCount">{{ cart_count }}</span> items)</span>
+                    <span class="fw-semibold" id="totalMrp">₹{{ total_mrp }}</span>
+                </div>
+
+                <div class="fh-price-row">
+                    <span class="text-secondary">Discount on MRP</span>
+                    <span class="text-success fw-semibold" id="totalDiscount">-₹{{ savings }}</span>
+                </div>
+
+                <div class="fh-price-row">
+                    <span class="text-secondary">Delivery Charges</span>
+                    <span class="text-success fw-semibold">FREE <del class="text-muted small">₹40</del></span>
+                </div>
+
+                <div class="fh-price-row">
+                    <span class="text-secondary">Secured Packaging Fee</span>
+                    <span class="text-success fw-semibold">FREE</span>
+                </div>
+
+                <div class="fh-price-row fh-price-total">
+                    <span>Total Amount</span>
+                    <span class="text-danger fw-bold fs-5" id="totalAmount">₹{{ total }}</span>
+                </div>
+
+                <div class="fh-savings-alert mb-3">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <span>You will save <strong id="savingsText">₹{{ savings }}</strong> on this order!</span>
+                </div>
+
+                <a href="{% url 'checkout' %}" class="btn btn-danger w-100 py-3 rounded-pill fw-bold fs-6 shadow-sm">
+                    PLACE ORDER
+                </a>
+
+                <div class="fh-trust-badge">
+                    <i class="bi bi-shield-check text-success fs-3"></i>
+                    <div class="small">
+                        Safe and Secure Payments. Easy returns. 100% Authentic products.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    {% else %}
+    <!-- EMPTY CART STATE -->
+    <div class="bg-white rounded-4 shadow-sm border p-5 text-center my-4" style="max-width: 600px; margin: 0 auto;">
+        <div style="font-size: 4rem;">🛒</div>
+        <h4 class="fw-bold mt-3">Your Shopping Cart is Empty</h4>
+        <p class="text-muted">
+            Explore our latest collections and find dresses, shirts, and trending styles made just for you!
+        </p>
+        <div class="mt-4">
+            <a href="{% url 'home' %}" class="btn btn-danger btn-lg px-5 rounded-pill fw-bold">
+                Shop Now
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// AJAX Cart Stepper & Remove with Toast Notifications
+function updateCartItem(itemId, action) {
+    var url = '/cart/update/' + itemId + '/' + action + '/';
+
+    fetch(url, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (!data) return;
+
+        if (data.status === 'error') {
+            showToast({
+                title: 'Stock Limit',
+                message: data.error_msg,
+                type: 'warning'
+            });
+            return;
+        }
+
+        if (data.item_deleted) {
+            var row = document.getElementById('cartRow-' + itemId);
+            if (row) {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '0';
+                row.style.transform = 'translateX(-30px)';
+                setTimeout(function() {
+                    if (row.parentNode) row.parentNode.removeChild(row);
+                }, 300);
+            }
+            showToast({
+                title: 'Item Removed',
+                message: 'The item was removed from your cart.',
+                type: 'info'
+            });
+        } else {
+            var qtySpan = document.getElementById('qtyVal-' + itemId);
+            if (qtySpan) qtySpan.textContent = data.quantity;
+
+            var subtotalSpan = document.getElementById('itemSubtotal-' + itemId);
+            if (subtotalSpan) subtotalSpan.textContent = '₹' + data.subtotal;
+
+            showToast({
+                title: 'Cart Updated',
+                message: action === 'increase' ? 'Quantity increased' : 'Quantity decreased',
+                type: 'success',
+                duration: 2000
+            });
+        }
+
+        // Update Totals
+        var totalAmount = document.getElementById('totalAmount');
+        if (totalAmount) totalAmount.textContent = '₹' + data.cart_total;
+
+        var cartCountHeader = document.getElementById('cartCountHeader');
+        if (cartCountHeader) cartCountHeader.textContent = data.cart_count;
+
+        var priceItemsCount = document.getElementById('priceItemsCount');
+        if (priceItemsCount) priceItemsCount.textContent = data.cart_count;
+
+        updateCartBadge(data.cart_count);
+
+        if (data.empty) {
+            setTimeout(function() { window.location.reload(); }, 600);
+        }
+    })
+    .catch(function() {
+        window.location.reload();
+    });
+}
+
+var currentCartBaseTotal = {{ total }};
+function fillCartCoupon(code) {
+    document.getElementById('cartCouponInput').value = code;
+    applyCartCoupon();
+}
+
+function applyCartCoupon() {
+    var code = document.getElementById('cartCouponInput').value.trim().toUpperCase();
+    var msg = document.getElementById('cartCouponMsg');
+    var totalEl = document.getElementById('totalAmount');
+    if (!totalEl || !msg) return;
+
+    if (code === 'FIRST200') {
+        var discount = Math.min(200, currentCartBaseTotal);
+        var newTotal = Math.max(0, currentCartBaseTotal - discount);
+        totalEl.innerHTML = '₹' + newTotal.toFixed(2) + ' <span class="badge bg-success small ms-1" style="font-size:0.7rem;">-₹200 Applied</span>';
+        msg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Coupon FIRST200 applied! Saved ₹200.</span>';
+    } else if (code === 'FASHION50') {
+        var discount = Math.round(currentCartBaseTotal * 0.5 * 100) / 100;
+        var newTotal = currentCartBaseTotal - discount;
+        totalEl.innerHTML = '₹' + newTotal.toFixed(2) + ' <span class="badge bg-success small ms-1" style="font-size:0.7rem;">-50% Applied</span>';
+        msg.innerHTML = '<span class="text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Coupon FASHION50 applied! 50% discount.</span>';
+    } else {
+        msg.innerHTML = '<span class="text-danger fw-bold"><i class="bi bi-exclamation-circle-fill"></i> Invalid Coupon. Try FIRST200 or FASHION50.</span>';
+    }
+}
+</script>
+{% endblock %}

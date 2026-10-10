@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Track Order {{ order.order_number }} - FashionHub{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 860px;">
+
+    <!-- BREADCRUMB -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-decoration-none text-muted">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'my_orders' %}" class="text-decoration-none text-muted">My Orders</a></li>
+            <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">Track {{ order.order_number }}</li>
+        </ol>
+    </nav>
+
+    <div class="bg-white rounded-4 shadow-sm border p-4 p-md-5 mb-4">
+
+        <!-- ORDER HEADER -->
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 pb-3 border-bottom mb-4">
+            <div>
+                <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-bold mb-1">
+                    ORDER #{{ order.order_number }}
+                </span>
+                <h4 class="fw-bold mb-1 text-dark">Shipment Tracking &amp; Status</h4>
+                <div class="small text-muted">
+                    Placed on <strong>{{ order.created_at|date:"d M Y, h:i A" }}</strong> • Payment: <strong>{{ order.payment_label }}</strong>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="status-pill status-{{ order.status|slugify }} px-3 py-2 fs-6">
+                    {{ order.get_status_display }}
+                </span>
+                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3" onclick="window.print()" title="Print Tax Invoice">
+                    <i class="bi bi-printer me-1"></i> Print Invoice
+                </button>
+            </div>
+        </div>
+
+        <!-- TRACKING TIMELINE (Amazon & Flipkart Style) -->
+        {% if order.status == 'Cancelled' %}
+        <div class="alert alert-danger p-3 rounded-3 d-flex align-items-center gap-2 mb-4">
+            <i class="bi bi-x-circle-fill fs-4"></i>
+            <div>
+                <strong>This Order Was Cancelled</strong>
+                <div class="small">The order has been cancelled and any refund has been initiated to your original payment method.</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="p-3 bg-light rounded-4 border mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="small fw-bold text-uppercase text-muted"><i class="bi bi-truck text-danger me-1"></i> Live Delivery Progress</span>
+                <span class="badge bg-success fw-bold">Estimated Delivery: in 2 - 3 Days</span>
+            </div>
+
+            <!-- Tracker Steps -->
+            <div class="tracker py-3">
+                {% for step in order.tracking_steps %}
+                <div class="tracker-step {% if step.done %}done{% endif %} {% if step.current %}current{% endif %}">
+                    <div class="tracker-dot">
+                        {% if step.done %}<i class="bi bi-check-lg"></i>{% else %}{{ forloop.counter }}{% endif %}
+                    </div>
+                    <div class="tracker-label">{{ step.label }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Courier Details Box -->
+            <div class="mt-3 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center gap-2 small text-secondary">
+                <div>
+                    <span class="text-muted">Courier Partner:</span> <strong>BlueDart Express Logistics</strong>
+                </div>
+                <div>
+                    <span class="text-muted">Tracking AWB ID:</span> <code class="text-dark fw-bold">AWB-8492049102</code>
+                </div>
+                <div>
+                    <span class="text-muted">Current Location:</span> 
+                    {% if order.status == 'Delivered' %}
+                    <strong class="text-success"><i class="bi bi-check-circle-fill"></i> Delivered to Doorstep</strong>
+                    {% elif order.status == 'Out for Delivery' %}
+                    <strong class="text-primary"><i class="bi bi-bicycle"></i> Out with Courier Agent (Ramesh Kumar - +91 98401 23456)</strong>
+                    {% elif order.status == 'Shipped' %}
+                    <strong class="text-primary"><i class="bi bi-truck"></i> In Transit - Hub Chennai Sorting Center</strong>
+                    {% elif order.status == 'Confirmed' %}
+                    <strong class="text-dark">Order Packed &amp; Handed to BlueDart</strong>
+                    {% else %}
+                    <strong class="text-muted">Order Placed - Awaiting Warehouse Packing</strong>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- LIVE AUTO-TRACKING INDICATOR (Automatic progress - no manual clicking) -->
+            <div class="mt-3 pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2 small">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill fw-semibold">
+                        <span class="spinner-grow spinner-grow-sm text-success me-1" style="width:7px; height:7px;" role="status"></span> Live Auto-Progress Active
+                    </span>
+                    <span class="text-muted">Order status updates automatically based on realistic dispatch &amp; transit time.</span>
+                </div>
+                <div class="text-muted" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check text-success"></i> Auto-synced with BlueDart
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row g-4">
+
+            <!-- LEFT: ITEMS IN ORDER -->
+            <div class="col-md-7">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Items in this Package</h6>
+                <div class="border rounded-3 p-3 bg-white">
+                    {% for item in order.items.all %}
+                    <div class="d-flex align-items-center justify-content-between py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <div class="d-flex align-items-center gap-3">
+                            {% if item.image %}
+                            <img src="{{ item.image }}" alt="{{ item.name }}" class="rounded-2 border p-1" style="width: 55px; height: 55px; object-fit: contain;">
+                            {% endif %}
+                            <div>
+                                <div class="fw-semibold small text-dark">{{ item.name }}</div>
+                                <small class="text-muted">Qty: {{ item.quantity }} × ₹{{ item.price }}</small>
+                            </div>
+                        </div>
+                        <span class="fw-bold text-dark">₹{{ item.subtotal }}</span>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-flex justify-content-between pt-3 mt-2 border-top">
+                        <span class="fw-bold">Total Amount Paid:</span>
+                        <span class="fw-bold text-danger fs-5">₹{{ order.total }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: DELIVERY ADDRESS & DETAILS -->
+            <div class="col-md-5">
+                <h6 class="fw-bold text-uppercase small text-muted mb-3">Delivery Address</h6>
+                <div class="border rounded-3 p-3 bg-light">
+                    {% if order.shipping_address %}
+                    <strong class="d-block text-dark">{{ order.shipping_name }}</strong>
+                    <div class="small text-secondary mt-1">
+                        {{ order.shipping_address }}<br>
+                        {{ order.shipping_city }} - {{ order.shipping_pincode }}
+                    </div>
+                    <div class="small text-dark mt-2">
+                        <i class="bi bi-telephone text-danger me-1"></i> +91 {{ order.shipping_phone }}
+                    </div>
+                    {% else %}
+                    <div class="small text-muted">Standard Registered Address on Profile</div>
+                    {% endif %}
+
+                    {% if order.transaction_id %}
+                    <div class="mt-3 pt-2 border-top small text-muted" style="font-size: 0.75rem;">
+                        <strong>Transaction Ref:</strong><br>
+                        <code>{{ order.transaction_id }}</code>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- RESEND CONFIRMATION EMAIL WIDGET -->
+                <div class="border rounded-3 p-3 bg-white mt-3 shadow-sm">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-envelope-at text-danger fs-5"></i>
+                        <h6 class="fw-bold mb-0 small text-uppercase">Order Invoice &amp; Email</h6>
+                    </div>
+                    <div class="small text-muted mb-2" style="font-size:0.75rem;">
+                        Sent to: <strong class="text-dark">{{ order.shipping_email|default:user.email }}</strong>
+                    </div>
+                    <form method="POST" action="{% url 'resend_order_email' order.id %}">
+                        {% csrf_token %}
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="email" name="email" class="form-control" value="{{ order.shipping_email|default:user.email }}" placeholder="Enter email address" required>
+                            <button type="submit" class="btn btn-outline-danger fw-semibold">
+                                <i class="bi bi-send me-1"></i> Resend
+                            </button>
+                        </div>
+                        <div class="form-text text-muted" style="font-size:0.7rem;">
+                            Need the invoice receipt in another inbox? Type email and click Resend.
+                        </div>
+                    </form>
+                </div>
+
+                <!-- CANCEL ORDER BUTTON -->
+                {% if order.status == 'Placed' or order.status == 'Confirmed' %}
+                <form method="POST" action="{% url 'cancel_order' order.id %}" class="mt-3"
+                      onsubmit="return confirm('Are you sure you want to cancel this order? This action cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-semibold">
+                        <i class="bi bi-x-circle me-1"></i> Cancel This Order
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <!-- DETAILED SHIPMENT MILESTONE TIMELINE -->
+        <div class="mt-4 pt-3 border-top">
+            <h6 class="fw-bold text-uppercase small text-muted mb-3"><i class="bi bi-clock-history text-danger me-1"></i> Detailed Shipment Milestones</h6>
+            <div class="bg-light rounded-4 border p-3 p-md-4">
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <strong>Order Placed &amp; Payment Verified</strong>
+                            <div class="text-muted">{{ order.created_at|date:"d M Y, h:i A" }} • Order #{{ order.order_number }} placed via {{ order.payment_label }}</div>
+                        </div>
+                    </div>
+                    {% if order.status in 'Confirmed,Shipped,Out for Delivery,Delivered' %}
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <strong>Order Confirmed &amp; Packed</strong>
+                            <div class="text-muted">Item inspected and packed in tamper-proof package at Chennai Fulfillment Hub</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if order.status in 'Shipped,Out for Delivery,Delivered' %}
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <strong>Dispatched via BlueDart Express Logistics</strong>
+                            <div class="text-muted">Tracking AWB ID: <code class="text-dark fw-bold">AWB-8492049102</code> • In Transit sorting center</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if order.status in 'Out for Delivery,Delivered' %}
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <strong>Out for Delivery</strong>
+                            <div class="text-muted">Courier Executive Ramesh Kumar (+91 98401 23456) out for doorstep delivery</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if order.status == 'Delivered' %}
+                    <div class="d-flex gap-3">
+                        <div class="text-success fs-5"><i class="bi bi-check-circle-fill"></i></div>
+                        <div>
+                            <strong>Delivered to Doorstep ✓</strong>
+                            <div class="text-muted">Delivered to {{ order.shipping_name }}. Verified via Doorstep Delivery PIN.</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top text-center">
+            <a href="{% url 'my_orders' %}" class="btn btn-outline-dark rounded-pill px-4 btn-sm me-2">
+                ← Back to My Orders
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-danger rounded-pill px-4 btn-sm fw-semibold">
+                Shop More Styles
+            </a>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Automatic Real-Time Tracking Status Polling (Auto-progress without manual clicking)
+(function() {
+    var orderId = {{ order.id }};
+    var currentStatus = "{{ order.status }}";
+    if (currentStatus === 'Delivered' || currentStatus === 'Cancelled') return;
+
+    setInterval(function() {
+        fetch('/my-orders/' + orderId + '/status-api/')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.status && data.status !== currentStatus) {
+                    // Status has automatically advanced! Reload to update progress bar smoothly
+                    window.location.reload();
+                }
+            })
+            .catch(function(e) {});
+    }, 10000); // Polls every 10 seconds
+})();
+</script>
+{% endblock %}

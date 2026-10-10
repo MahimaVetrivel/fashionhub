@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login to FashionHub - Explore Plus Trends{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 850px;">
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden border">
+        <div class="row g-0">
+
+            <!-- LEFT PROMOTIONAL BANNER (Flipkart & Myntra Style) -->
+            <div class="col-md-5 d-none d-md-flex flex-column justify-content-between p-4 p-lg-5 text-white"
+                 style="background: linear-gradient(135deg, #ff3f6c, #e02f5a);">
+                <div>
+                    <span class="badge bg-white text-danger px-3 py-1 rounded-pill fw-bold text-uppercase mb-3" style="font-size: 0.75rem;">
+                        ✦ Exclusive Benefits
+                    </span>
+                    <h3 class="fw-bold mb-3">Welcome to FashionHub</h3>
+                    <p class="small opacity-90 mb-4">
+                        Login to access your personalized wishlist, track orders live, and get member-only flash discounts.
+                    </p>
+
+                    <div class="d-flex flex-column gap-3 small">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                            <span>Flat 50% - 70% OFF on Top Brands</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                            <span>Free Express Delivery Above ₹499</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill fs-5"></i>
+                            <span>Hassle-Free 7-Day Returns</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-top border-white border-opacity-25 small opacity-75">
+                    100% Secure &amp; Verified Fashion Marketplace
+                </div>
+            </div>
+
+            <!-- RIGHT LOGIN FORM -->
+            <div class="col-md-7 p-4 p-lg-5 bg-white">
+                <div class="mb-4">
+                    <h4 class="fw-bold text-dark mb-1">Sign In</h4>
+                    <p class="text-muted small mb-0">Get access to your Orders, Wishlist and Recommendations</p>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger py-2 small mb-3 rounded-3">
+                    <i class="bi bi-exclamation-circle me-1"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <!-- QUICK DEMO LOGIN HELPER PILL -->
+                <div class="alert alert-light border py-2 px-3 small d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 rounded-3">
+                    <span class="text-muted" style="font-size: 0.78rem;"><i class="bi bi-person-badge text-primary me-1"></i> Quick Test:</span>
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 fw-semibold" style="font-size: 0.75rem;" onclick="quickFillLogin('Mahi', 'Mahi1234')">
+                            Mahi (Demo)
+                        </button>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <!-- USERNAME -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-uppercase text-muted">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text"
+                                   name="username"
+                                   id="loginUsername"
+                                   class="form-control"
+                                   placeholder="Enter your username"
+                                   required
+                                   autofocus>
+                        </div>
+                    </div>
+
+                    <!-- PASSWORD WITH SHOW/HIDE TOGGLE -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-0">Password</label>
+                            <a href="{% url 'forgot_password' %}" class="small text-danger text-decoration-none fw-semibold">
+                                Forgot Password?
+                            </a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password"
+                                   name="password"
+                                   id="loginPassword"
+                                   class="form-control"
+                                   placeholder="Enter password"
+                                   required>
+                            <button type="button" class="btn btn-outline-secondary" onclick="togglePasswordVisibility('loginPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- REMEMBER ME CHECKBOX -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="rememberMe" name="remember_me" checked>
+                            <label class="form-check-label small text-muted" for="rememberMe">
+                                Remember me on this device
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <button type="submit" class="btn btn-danger w-100 py-2 rounded-pill fw-bold fs-6 shadow-sm">
+                        Login to FashionHub →
+                    </button>
+
+                    <!-- SOCIAL SIGN IN -->
+                    <div class="position-relative my-4 text-center">
+                        <hr class="text-muted">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 small text-muted fw-semibold" style="font-size: 0.72rem;">OR CONTINUE WITH</span>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-semibold d-flex align-items-center justify-content-center gap-2 rounded-pill" onclick="showToast({title: 'Google Sign In', message: 'Google OAuth login integration ready.', type: 'info'})">
+                                <i class="bi bi-google text-danger"></i> Google
+                            </button>
+                        </div>
+                        <div class="col-6">
+                            <button type="button" class="btn btn-outline-dark w-100 py-2 small fw-semibold d-flex align-items-center justify-content-center gap-2 rounded-pill" onclick="showToast({title: 'Apple ID', message: 'Apple Single Sign-On integration ready.', type: 'info'})">
+                                <i class="bi bi-apple"></i> Apple ID
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="text-center pt-3 border-top small text-muted">
+                        New to FashionHub?
+                        <a href="{% url 'register' %}" class="text-danger fw-bold text-decoration-none ms-1">
+                            Create an Account (Email OTP)
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePasswordVisibility(fieldId, btn) {
+    var input = document.getElementById(fieldId);
+    var icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+
+function quickFillLogin(u, p) {
+    document.getElementById('loginUsername').value = u;
+    var passEl = document.getElementById('loginPassword');
+    passEl.value = '123456';
+    passEl.focus();
+}
+</script>
+{% endblock %}
