@@ -166,8 +166,8 @@
                        class="btn btn-dark btn-lg px-4 py-2 rounded-pill fw-bold d-flex align-items-center gap-2">
                         <i class="bi bi-lightning-charge-fill text-warning fs-5"></i> Buy Now
                     </a>
-
-                    <a href="https://api.whatsapp.com/send?text=Check%20out%20this%20stunning%20dress%20on%20FashionHub!%20{{ product.name|urlencode }}%20at%20only%20₹{{ product.price }}%20{{ request.scheme }}://{{ request.get_host }}/product/{{ product.id }}/"
+                     
+                    <a href="https://api.whatsapp.com/send?text=Check%20out%20this%20stunning%20dress%20on%20FashionHub!%20{{ product.name|urlencode }}%20at%20only%20₹{{ product.price }}%20https://mahimamahi.pythonanywhere.com/product/{{ product.id }}/"
                     target="_blank"
                        class="btn btn-outline-success btn-lg px-3 py-2 rounded-pill fw-semibold d-flex align-items-center gap-2"
                        title="Share with friends on WhatsApp">
